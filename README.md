@@ -1,121 +1,119 @@
-# Stash - Personal Content Queue  
+# stash - personal content queue
 
-## 📌 Overview  
-**Stash** is a lightweight system for **capturing, organizing, and consuming** links (articles, podcasts, videos) with AI-assisted summaries.  
-It integrates with **mobile shortcuts, CLI tools, Obsidian, and a web UI** to keep content accessible and useful.
-
----
-
-## 🔹 Features  
-
-### **1️⃣ Capturing Links (Input)**  
-✅ **Mobile:**  
-   - **iOS Shortcut** → Share menu sends links to `POST https://stash-link.fly.dev/save`
-
-✅ **CLI:**  
-   - **Bash script (`fzf`)** for quick saving (Planned)  
-
-✅ **Web UI (Planned):**  
-   - **Dashboard for viewing & managing links**  
-   - **Hosted on Vercel**  
-
-🚀 **Future:**  
-   - **Browser extension** for one-click saving  
-   - **Email forwarding** (`stash@mydomain.com` auto-saves links)  
+## 📌 overview
+**stash** is a lightweight system for **capturing, organizing, and consuming** links (articles, podcasts, videos) with ai-assisted summaries.  
+it integrates with **mobile shortcuts**, a **cli**, **obsidian**, and a simple **web ui** (using *sveltekit* + tailwind) to keep content accessible and ephemeral.
 
 ---
 
-## **2️⃣ API - Storage & Retrieval**  
+## 🔹 features
 
-### **Current API Endpoints**  
-- `POST /save` → Save a link  
-- `GET /links` → Retrieve all saved links  
+### **1️⃣ capturing links (input)**
+- **mobile**  
+  - ios shortcut → share menu sends links to `post https://stash-link.fly.dev/save`
+- **cli**  
+  - planned: bash script (fzf) for quick saving
+- **web ui**  
+  - minimal sveltekit + tailwind deployment at [stash-peach.vercel.app](https://stash-peach.vercel.app)  
+  - view and manage links, mark read, delete
+- **future**  
+  - browser extension (one-click saves)  
+  - email forwarding (stash@mydomain.com)  
 
-### **Planned API Endpoints**  
-- `PATCH /links/{id}/read` → Mark link as read  
-- `DELETE /links/{id}` → Remove a link  
-- `POST /summarize` → AI-generated summary of a link  
+---
 
-### **Database Model (Postgres on Fly.io)**  
-```python
-class Link(Base):
-    id: UUID
-    url: str
-    note: str
-    timestamp: datetime
-```
+## **2️⃣ api - storage & retrieval**
 
-### ORM and Migration strategy
-- **SQLModel** for defining the database schema
-- **Alembic** migrations for managing database changes
+### **current api endpoints**  
+- `post /save` → save a link  
+- `get /links` → retrieve all saved links  
+- `patch /links/{id}/read` → mark link as read  
+- `delete /links/{id}` → remove a link  
 
-## 3️⃣ Retrieving & Using Links
+### **planned api endpoints**  
+- `post /summarize` → ai-generated summary of a link  
 
-✅ **Obsidian Sync**
+### **database model**  
+postgres on fly.io with a `Link` table featuring `id`, `url`, `note`, `timestamp`, and now a `read` boolean for read-tracking.
 
-- Python script fetches links from GET /links
-- Writes to saved_links.md for easy access
+### **orm & migration**  
+- using **sqlmodel**  
+- managing schema updates with **alembic**  
 
-✅ **CLI Picker** (fzf) (Planned)
+---
 
-- Choose & open links interactively from terminal
+## **3️⃣ retrieving & using links**
 
-✅ **Web UI** (stash.vercel.app) (Planned)
+- **obsidian sync**: python script fetches `get /links` and writes to `saved_links.md`  
+- **web ui**: sveltekit + tailwind at stash-peach.vercel.app  
+- **cli picker**: (planned) open links interactively using fzf  
+- **future**:  
+  - ai summarization  
+  - category tagging  
 
-- Simple dashboard for managing links
-- Search & filtering
+---
 
-🚀 **Future Features**:
+## 4️⃣ roadmap
 
-- AI Summarization (GPT-4, LlamaIndex)
-- Read Tracking (read: bool)
+**phase 1** (complete-ish):  
+- backend on fly.io (save and retrieve links)  
+- ios shortcut capture  
+- basic db model with read column
 
-## 4️⃣ Roadmap
+**phase 2** (ongoing):  
+- minimal web ui with sveltekit  
+- read tracking & delete endpoints  
+- browser extension for quick saves
 
-✅ **Phase 1: Core Capture System**
+**phase 3** (future):  
+- ai summarization (gpt-4 / llamaindex)  
+- auto-categorization & tagging  
 
-- Backend running on Fly.io (POST /save, GET /links)
-- iOS Shortcut for quick saving
-- Basic database model (Postgres)
+---
 
-🚀 **Phase 2: Retrieval & UI**
+## 5️⃣ deployment
 
-- Build a Basic UI (stash.vercel.app)
-- Implement Read Tracking (read: bool)
-- CLI Picker (fzf for selecting links)
-- Browser Extension for Quick Saves
+- **backend**: fastapi + postgres on fly.io  
+- **frontend**: sveltekit on vercel (stash-peach.vercel.app)  
+- **cli**: local scripts
 
-🚀 **Phase 3: AI & Intelligence**
+---
 
-- AI Summarization (On-demand article summaries)
-- Auto-categorization & tagging
+## 6️⃣ general development rules (for ais)
 
-## 5️⃣ Deployment
+1. check the top-level readme for an overview.  
+2. prioritize speed and simplicity, no bloat.  
+3. keep workflow low-friction—saving/retrieving is instant.  
+4. minimal aesthetics. no trashy interfaces.  
+5. avoid feature creep.  
+6. no heavy deps unless necessary.  
+7. frontend is snappy & minimalistic, no over-engineering.  
+8. keep it personal, avoid corporate “enterprise” style.  
+9. all changes must improve the experience: faster saves, easier retrieval, more useful content.  
+10. if in doubt, ask, “would i actually use this daily?” if no, it’s not worth it.
 
-- Backend: Fly.io (FastAPI + Postgres)
-- Frontend (Planned): Vercel (SvelteKit)
-- CLI & Scripts: Runs locally
+---
 
-## 6️⃣ General Development Rules (for AIs)
+## 7️⃣ user auth
 
-these rules ensure that any AI working on stash understands the project’s core philosophy:
+to share stash with friends, we’ll introduce a basic registration/login flow. keep it lightweight:
 
-1. Check the top-level README for an overview. this is THE README. everything is inside.
-2. Prioritize speed and simplicity, no bloat.
-3. Keep the workflow low-friction—saving and retrieving links should be instant.
-4. For anything aesthetic-related, keep it simple, clean, and elegant. It should not look like trash.
-5. Avoid unnecessary features. If a new feature doesn't actively improve usability, it doesn’t belong.
-6. Do not add heavy dependencies unless absolutely necessary. Lightweight and efficient is the goal.
-7. Frontend should be snappy and minimalistic. No over-engineering, no unnecessary animations, just functional elegance.
-8. Avoid corporate/enterprise-style design. This is a personal project—no bloated UIs, dashboards, or complex settings pages.
-9. All changes should improve the experience. Every change should either:
-    Make saving links faster
-    Make retrieving links easier
-    Make content more useful (e.g., summaries, categorization)
-10. If in doubt, ask: “Would I actually use this daily?” If the answer is no, it’s not worth adding.
+- **user accounts**:  
+  - new table storing user info (username, hashed password, etc)  
+- **login/registration**:  
+  - minimal forms for sign up & sign in (or just do an invite code approach if you’re lazy)  
+- **token-based auth**:  
+  - upon login, generate a token (jwt or similar).  
+  - all subsequent requests include that token in headers.  
+- **private stash**:  
+  - each user has their own link storage, so friends can’t rummage around your stash, and vice versa.  
 
-## 7️⃣ Next Steps
+---
 
-1️⃣ Build a Basic UI → Display & manage links in a clean interface
-2️⃣ Implement Read Tracking (read column in DB)
-3️⃣ Develop a Browser Extension for Quick Saves
+## 8️⃣ next steps
+1. implement user auth (db, login, registration, token handling).  
+2. create a basic browser extension to post links to `/save`.  
+3. experiment with ai summarization via `post /summarize`.  
+4. keep refining the sveltekit ui & read-tracking.  
+
+*that’s it. ephemeral & frictionless.*  
