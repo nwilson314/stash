@@ -5,7 +5,30 @@
 
 	let { data }: PageProps = $props();
     let links: Link[] = $state(data.links);
+    let newUrl = $state('');
+    let newNote = $state('');
     let activeTab: LinkStatusTab = $state(LinkStatusTab.Unread);
+
+    async function addLink() {
+        // event.preventDefault();
+        if (!newUrl.trim()) return;
+        try {
+        const body = { url: newUrl, note: newNote };
+        const res = await fetch('https://stash-link.fly.dev/save', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const savedLink = await res.json();
+        // prepend or push to array
+        links = [savedLink, ...links];
+        // reset fields
+        newUrl = '';
+        newNote = '';
+        } catch (err) {
+        console.error('failed to save link:', err);
+        }
+    }
   
     async function markRead(id: string) {
       try {
@@ -30,12 +53,34 @@
     }
   </script>
   
-  <div class="min-h-screen bg-gray-900 text-gray-200">
+<div class="min-h-screen bg-gray-900 text-gray-200">
     <header class="bg-gray-800 py-4">
       <h1 class="text-center text-2xl font-bold">stash links</h1>
     </header>
   
     <main class="max-w-2xl mx-auto p-4 space-y-4">
+        <!-- add new link form -->
+    <form class="flex flex-col space-y-2"
+        onsubmit={addLink}>
+        <input
+            type="text"
+            placeholder="link url"
+            bind:value={newUrl}
+            class="px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none"
+        />
+        <input
+            type="text"
+            placeholder="note (optional)"
+            bind:value={newNote}
+            class="px-2 py-1 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none"
+        />
+        <button
+            type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white rounded px-3 py-1 w-24"
+        >
+        add
+        </button>
+    </form>
       <!-- tabs -->
       <div class="flex space-x-4 border-b border-gray-700 mb-4">
         <button

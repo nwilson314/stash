@@ -2,50 +2,52 @@
 
 ## 📌 overview
 **stash** is a lightweight system for **capturing, organizing, and consuming** links (articles, podcasts, videos) with ai-assisted summaries.  
-it integrates with **mobile shortcuts**, a **cli**, **obsidian**, and a simple **web ui** (using *sveltekit* + tailwind) to keep content accessible and ephemeral.
+it integrates with **mobile shortcuts**, a **cli**, **obsidian**, and a simple **web ui** (using sveltekit + tailwind) to keep content accessible and ephemeral.
 
 ---
 
 ## 🔹 features
 
-### **1️⃣ capturing links (input)**
+### 1️⃣ capturing links (input)
 - **mobile**  
   - ios shortcut → share menu sends links to `post https://stash-link.fly.dev/save`
 - **cli**  
   - planned: bash script (fzf) for quick saving
 - **web ui**  
   - minimal sveltekit + tailwind deployment at [stash-peach.vercel.app](https://stash-peach.vercel.app)  
-  - view and manage links, mark read, delete
+  - tabbed interface separating **unread** vs. **read** links  
+  - inline form to add new links (url + optional note)  
+  - mark read & delete links quickly
 - **future**  
   - browser extension (one-click saves)  
   - email forwarding (stash@mydomain.com)  
 
 ---
 
-## **2️⃣ api - storage & retrieval**
+## 2️⃣ api - storage & retrieval
 
-### **current api endpoints**  
+### current api endpoints
 - `post /save` → save a link  
 - `get /links` → retrieve all saved links  
-- `patch /links/{id}/read` → mark link as read  
+- `patch /links/{id}/read` → mark a link as read  
 - `delete /links/{id}` → remove a link  
 
-### **planned api endpoints**  
+### planned api endpoints
 - `post /summarize` → ai-generated summary of a link  
 
-### **database model**  
-postgres on fly.io with a `Link` table featuring `id`, `url`, `note`, `timestamp`, and now a `read` boolean for read-tracking.
+### database model
+postgres on fly.io with a `Link` table featuring `id`, `url`, `note`, `timestamp`, plus a `read` boolean for read-tracking.
 
-### **orm & migration**  
+### orm & migration
 - using **sqlmodel**  
 - managing schema updates with **alembic**  
 
 ---
 
-## **3️⃣ retrieving & using links**
+## 3️⃣ retrieving & using links
 
 - **obsidian sync**: python script fetches `get /links` and writes to `saved_links.md`  
-- **web ui**: sveltekit + tailwind at stash-peach.vercel.app  
+- **web ui**: sveltekit + tailwind at stash-peach.vercel.app (includes inline add form + tabs)  
 - **cli picker**: (planned) open links interactively using fzf  
 - **future**:  
   - ai summarization  
@@ -58,11 +60,11 @@ postgres on fly.io with a `Link` table featuring `id`, `url`, `note`, `timestamp
 **phase 1** (complete-ish):  
 - backend on fly.io (save and retrieve links)  
 - ios shortcut capture  
-- basic db model with read column
+- basic db model with read column  
 
 **phase 2** (ongoing):  
-- minimal web ui with sveltekit  
-- read tracking & delete endpoints  
+- minimal web ui with sveltekit (tabs for unread/read)  
+- user auth (registration/login) for sharing  
 - browser extension for quick saves
 
 **phase 3** (future):  
@@ -96,24 +98,19 @@ postgres on fly.io with a `Link` table featuring `id`, `url`, `note`, `timestamp
 
 ## 7️⃣ user auth
 
-to share stash with friends, we’ll introduce a basic registration/login flow. keep it lightweight:
-
-- **user accounts**:  
-  - new table storing user info (username, hashed password, etc)  
-- **login/registration**:  
-  - minimal forms for sign up & sign in (or just do an invite code approach if you’re lazy)  
-- **token-based auth**:  
-  - upon login, generate a token (jwt or similar).  
-  - all subsequent requests include that token in headers.  
-- **private stash**:  
-  - each user has their own link storage, so friends can’t rummage around your stash, and vice versa.  
+to share stash with friends, we introduce a simple registration/login flow:
+- **user accounts**: store username, hashed password, etc.  
+- **login/registration**: minimal forms or invite-based.  
+- **token-based auth**: generate a token (jwt or similar) on login.  
+- **private stash**: each user sees only their own links.  
 
 ---
 
 ## 8️⃣ next steps
-1. implement user auth (db, login, registration, token handling).  
-2. create a basic browser extension to post links to `/save`.  
-3. experiment with ai summarization via `post /summarize`.  
-4. keep refining the sveltekit ui & read-tracking.  
 
-*that’s it. ephemeral & frictionless.*  
+1. finalize user auth in the backend and integrate in the web ui.  
+2. build a barebones browser extension (one-click `/save`).  
+3. experiment with ai summarization (maybe `post /summarize`).  
+4. keep refining the tabbed sveltekit ui & read-tracking.  
+
+that’s it. ephemeral & frictionless.  
