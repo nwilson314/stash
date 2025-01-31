@@ -14,7 +14,7 @@
         if (!newUrl.trim()) return;
         try {
         const body = { url: newUrl, note: newNote };
-        const res = await fetch('https://stash-link.fly.dev/save', {
+        const res = await fetch('https://stash-link.fly.dev/links/save', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(body)

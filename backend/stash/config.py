@@ -11,13 +11,18 @@ class Settings(BaseSettings):
 
     # Database Configuration
     CONNECTION_STRING: str = ""
-    
+
     # Local database settings
     DB_USER: str = "stash"
     DB_PASSWORD: str = "stash123"
     DB_HOST: str = "localhost"
     DB_PORT: str = "5432"
     DB_NAME: str = "stash"
+
+    # Security
+    JWT_SECRET: str = "super_secret_change_me"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 30
 
     @property
     def DATABASE_URL(self) -> str:

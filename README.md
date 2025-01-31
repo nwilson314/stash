@@ -65,11 +65,11 @@ postgres on fly.io with a `Link` table featuring `id`, `url`, `note`, `timestamp
 **phase 2** (ongoing):  
 - minimal web ui with sveltekit (tabs for unread/read)  
 - user auth (registration/login) for sharing  
-- browser extension for quick saves
+- auto-categorization & tagging 
 
 **phase 3** (future):  
 - ai summarization (gpt-4 / llamaindex)  
-- auto-categorization & tagging  
+- browser extension for quick saves
 
 ---
 

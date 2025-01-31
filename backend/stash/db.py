@@ -7,6 +7,7 @@ from loguru import logger
 # Create database engine
 engine = create_engine(settings.DATABASE_URL, echo=False)
 
+
 def get_session() -> Generator[Session, None, None]:
     logger.info(f"Getting session from url: {settings.DATABASE_URL}")
     with Session(engine) as session:
