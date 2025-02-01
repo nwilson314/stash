@@ -12,13 +12,16 @@ app.include_router(users.router)
 
 @app.middleware("http")
 async def log_request_origin(request, call_next):
-    logger.info(f"Incoming request from origin: {request.headers.get('origin')}")
-    logger.info(f"Request headers: {request.headers}")
+    # Keep logging minimal but informative for monitoring
+    logger.info(f"Incoming request: {request.method} {request.url}")
+    logger.info(f"Headers: {request.headers}")
+    origin = request.headers.get('origin', 'Unknown')
+    logger.info(f"{request.method} {request.url.path} from {origin}")
     response = await call_next(request)
     return response
 
 if settings.ENVIRONMENT == "dev":
-    logger.warning("Running in development mode - allowing specific origins")
+    logger.info("Running in development mode - CORS enabled for development origins")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
@@ -33,7 +36,7 @@ if settings.ENVIRONMENT == "dev":
         max_age=3600,  # Cache preflight requests for 1 hour
     )
 else:
-    logger.warning("Running in production mode - allowing specific origins")
+    logger.info("Running in production mode - CORS enabled for production origins")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[

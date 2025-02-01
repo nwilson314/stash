@@ -8,13 +8,16 @@ from loguru import logger
 engine = create_engine(settings.DATABASE_URL, echo=False)
 
 
-def get_session() -> Generator[Session, None, None]:
-    logger.info(f"Getting session from url: {settings.DATABASE_URL}")
+def get_session():
     with Session(engine) as session:
         yield session
 
 
-if __name__ == "__main__":
-    logger.info("Creating database")
+def create_db_and_tables():
+    logger.info("Initializing database...")
     SQLModel.metadata.create_all(engine)
-    logger.info("Database created")
+    logger.info("Database initialization complete")
+
+
+if __name__ == "__main__":
+    create_db_and_tables()

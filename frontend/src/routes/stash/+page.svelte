@@ -8,6 +8,7 @@
     let newUrl = $state('');
     let newNote = $state('');
     let activeTab: LinkStatusTab = $state(LinkStatusTab.Unread);
+    let pendingDeleteId = $state('');
 
     async function addLink() {
         if (!newUrl.trim()) return;
@@ -23,32 +24,48 @@
 
         if (res.ok) {
             const savedLink = await res.json();
-            links = [savedLink, ...links];
+            const parsedData = JSON.parse(savedLink.data);
+            
+            const linkDataKeys = parsedData[0];
+            const newLink: Link = {
+              id: parsedData[linkDataKeys.id],
+              url: parsedData[linkDataKeys.url],
+              note: parsedData[linkDataKeys.note],
+              read: parsedData[linkDataKeys.read]
+            };
+            console.log(newLink);
+            links = [newLink, ...links];
             newUrl = '';
             newNote = '';
+            activeTab = LinkStatusTab.Unread; // Switch to unread tab after adding
+            pendingDeleteId = ''; // Clear any pending delete state
         } else {
             console.error('failed to save link:', await res.text());
         }
     }
   
-    async function markRead(id: string) {
+    async function toggleRead(id: string) {
         const formData = new FormData();
         formData.append('id', id);
 
-        const res = await fetch('?/markRead', {
+        const res = await fetch('?/toggleRead', {
             method: 'POST',
             body: formData
         });
 
         if (res.ok) {
             const result = await res.json();
-            links = links.map((l: Link) => (l.id === result.id ? { ...l, read: true } : l));
+            links = links.map((l: Link) => (l.id === id ? { ...l, read: !l.read } : l));
         } else {
-            console.error('failed to mark as read:', await res.text());
+            console.error('failed to toggle read status:', await res.text());
         }
     }
   
-    async function removeLink(id: string) {
+    async function initiateDelete(id: string) {
+        pendingDeleteId = id;
+    }
+
+    async function confirmDelete(id: string) {
         const formData = new FormData();
         formData.append('id', id);
 
@@ -58,8 +75,8 @@
         });
 
         if (res.ok) {
-            const result = await res.json();
-            links = links.filter((l: Link) => l.id !== result.id);
+            links = links.filter((l: Link) => l.id !== id);
+            pendingDeleteId = '';
         } else {
             console.error('failed to delete link:', await res.text());
         }
@@ -129,17 +146,28 @@
             </div>
             <div class="flex gap-2">
               <button
-                onclick={() => markRead(link.id)}
-                class="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-sm"
+                onclick={() => toggleRead(link.id)}
+                class="border border-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-sm text-gray-300"
               >
                 mark read
               </button>
-              <button
-                onclick={() => removeLink(link.id)}
-                class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm"
-              >
-                delete
-              </button>
+              {#if pendingDeleteId === link.id}
+                <div class="flex items-center gap-2">
+                  <button
+                    onclick={() => confirmDelete(link.id)}
+                    class="border border-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-sm text-red-400"
+                  >
+                    confirm?
+                  </button>
+                </div>
+              {:else}
+                <button
+                  onclick={() => initiateDelete(link.id)}
+                  class="border border-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-sm text-red-600"
+                >
+                  delete
+                </button>
+              {/if}
             </div>
           </div>
         {/each}
@@ -154,13 +182,30 @@
               <span class="text-sm text-gray-400 italic">{link.note}</span>
             </div>
             <div class="flex gap-2">
-              <span class="text-green-400 text-sm font-semibold">read</span>
+              <span class="text-gray-500 text-sm">read</span>
               <button
-                onclick={() => removeLink(link.id)}
-                class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm"
+                onclick={() => toggleRead(link.id)}
+                class="border border-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-sm text-gray-300"
               >
-                delete
+                mark unread
               </button>
+              {#if pendingDeleteId === link.id}
+                <div class="flex items-center gap-2">
+                  <button
+                    onclick={() => confirmDelete(link.id)}
+                    class="border border-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-sm text-red-400"
+                  >
+                    confirm?
+                  </button>
+                </div>
+              {:else}
+                <button
+                  onclick={() => initiateDelete(link.id)}
+                  class="border border-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-sm text-red-400"
+                >
+                  delete
+                </button>
+              {/if}
             </div>
           </div>
         {/each}

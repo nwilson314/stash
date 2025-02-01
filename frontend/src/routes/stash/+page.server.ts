@@ -76,7 +76,7 @@ export const actions: Actions = {
     return await res.json();
   },
 
-  markRead: async ({ cookies, request }) => {
+  toggleRead: async ({ cookies, request }) => {
     const token = cookies.get('token');
     if (!token) {
       throw redirect(303, '/login');
@@ -102,7 +102,7 @@ export const actions: Actions = {
         cookies.delete('token', { path: '/' }); // Clear the invalid token
         throw redirect(303, '/login');
       }
-      throw error(res.status, 'Failed to mark link as read');
+      throw error(res.status, 'Failed to toggle read status');
     }
 
     return { success: true, id };

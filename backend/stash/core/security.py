@@ -20,7 +20,6 @@ def get_password_hash(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    print(f"Verifying password: {plain_password} with hash: {hashed_password}")
     return pwd_context.verify(plain_password, hashed_password)
 
 
@@ -52,12 +51,14 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         email: str | None = payload.get("sub")
         logger.info(f"Email: {email}")
         if email is None:
+            logger.warning("Token payload missing 'sub' claim")
             raise credentials_exception
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as e:
+        logger.warning(f"JWT validation failed: {str(e)}")
         raise credentials_exception
 
     user = db.exec(select(User).where(User.email == email)).first()
     if user is None:
+        logger.warning(f"No user found for validated token")
         raise credentials_exception
     return user
-

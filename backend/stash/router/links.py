@@ -26,7 +26,7 @@ def mark_link_read(link_id: int, db: Session = Depends(get_session), _: User = D
     link = db.exec(select(Link).where(Link.id == link_id)).first()
     if not link:
         raise HTTPException(status_code=404, detail="link not found")
-    link.read = True
+    link.read = not link.read
     db.commit()
     db.refresh(link)
     return link
