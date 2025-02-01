@@ -10,33 +10,42 @@ it integrates with **mobile shortcuts**, a **cli**, **obsidian**, and a simple *
 
 ### 1️⃣ capturing links (input)
 - **mobile**  
-  - ios shortcut → share menu sends links to `post https://stash-link.fly.dev/save`
+  - ios shortcut → share menu sends links to `POST /save`  
+  - *currently disabled due to authentication—future fix pending*
+    - need to build an api key store on the user model -> gonna be janky and probably not rotated. unfortunately, will not be ephemeral
 - **cli**  
-  - planned: bash script (fzf) for quick saving
+  - planned: bash script (`fzf`) for quick saving  
 - **web ui**  
-  - minimal sveltekit + tailwind deployment at [stash-peach.vercel.app](https://stash-peach.vercel.app)  
+  - minimal sveltekit + tailwind deployment at `stash-peach.vercel.app`  
   - tabbed interface separating **unread** vs. **read** links  
   - inline form to add new links (url + optional note)  
-  - mark read & delete links quickly
+  - mark read & delete links quickly  
 - **future**  
   - browser extension (one-click saves)  
-  - email forwarding (stash@mydomain.com)  
+  - email forwarding (`stash@mydomain.com`)  
+  - obsidian sync (python script fetches `GET /links` and writes to a markdown file)
+  - obsidian plugin (if feeling wild)
 
 ---
 
 ## 2️⃣ api - storage & retrieval
 
 ### current api endpoints
-- `post /save` → save a link  
-- `get /links` → retrieve all saved links  
-- `patch /links/{id}/read` → mark a link as read  
-- `delete /links/{id}` → remove a link  
+- `POST /users/register` → user registration  
+- `POST /users/login` → user authentication (returns jwt)  
+- `POST /links/save` → save a link *(requires authentication)*  
+- `GET /links` → retrieve all saved links *(requires authentication)*  
+- `PATCH /links/{id}/read` → mark a link as read *(requires authentication)*  
+- `DELETE /links/{id}` → remove a link *(requires authentication)*  
 
 ### planned api endpoints
-- `post /summarize` → ai-generated summary of a link  
+- `POST /summarize` → ai-generated summary of a link  
 
 ### database model
-postgres on fly.io with a `Link` table featuring `id`, `url`, `note`, `timestamp`, plus a `read` boolean for read-tracking.
+postgres on fly.io with a `users` table and a `links` table:
+
+- `users` table stores `id`, `email`, `hashed_password`, and an optional `api_key`  
+- `links` table stores `id`, `user_id` (foreign key), `url`, `note`, `timestamp`, and `read` status  
 
 ### orm & migration
 - using **sqlmodel**  
@@ -46,42 +55,71 @@ postgres on fly.io with a `Link` table featuring `id`, `url`, `note`, `timestamp
 
 ## 3️⃣ retrieving & using links
 
-- **obsidian sync**: python script fetches `get /links` and writes to `saved_links.md`  
-- **web ui**: sveltekit + tailwind at stash-peach.vercel.app (includes inline add form + tabs)  
-- **cli picker**: (planned) open links interactively using fzf  
+- **obsidian sync**: python script fetches `GET /links` and writes to a markdown file  
+- **web ui**: sveltekit + tailwind at `stash-peach.vercel.app`  
+- **cli picker**: (planned) open links interactively using `fzf`  
 - **future**:  
   - ai summarization  
   - category tagging  
 
 ---
 
-## 4️⃣ roadmap
+## 4️⃣ authentication flow
 
-**phase 1** (complete-ish):  
-- backend on fly.io (save and retrieve links)  
-- ios shortcut capture  
-- basic db model with read column  
+### token-based authentication
+- users log in via `POST /users/login`, which returns a **jwt access token**  
+- **token is stored in an httpOnly cookie** for security  
+- backend checks the token for authentication on all protected routes  
+- users log out by clearing the cookie  
 
-**phase 2** (ongoing):  
-- minimal web ui with sveltekit (tabs for unread/read)  
-- user auth (registration/login) for sharing  
-- auto-categorization & tagging 
-
-**phase 3** (future):  
-- ai summarization (gpt-4 / llamaindex)  
-- browser extension for quick saves
+### user auth in sveltekit
+- when logging in, the **backend sets the token in a cookie**  
+- protected routes read the token from cookies (`+page.server.ts`)  
+- if no valid token, user is redirected to `/login`  
+- logout button clears the cookie and redirects to `/login`  
 
 ---
 
-## 5️⃣ deployment
+## 5️⃣ frontend & ui updates
+
+### landing page
+- dark theme, minimal styling  
+- auto-redirects users to `/stash` if already logged in  
+
+### stash ui
+- displays **unread & read** links  
+- uses **server-side load (`+page.server.ts`)** to fetch links securely  
+- logout button in the top right  
+
+---
+
+## 6️⃣ roadmap
+
+**phase 1** (complete-ish):  
+- backend on fly.io (save and retrieve links)  
+- ios shortcut capture *(temporarily broken)*  
+- user authentication & token-based storage  
+- basic db model with user ownership  
+
+**phase 2** (ongoing):  
+- full web ui with sveltekit (tabs for unread/read)  
+- auto-categorization & tagging  
+- ai summarization  
+
+**phase 3** (future):  
+- browser extension for quick saves  
+- email-based link capture
+- some sort of obsidian integration
+
+---
+
+## 7️⃣ deployment
 
 - **backend**: fastapi + postgres on fly.io  
 - **frontend**: sveltekit on vercel (stash-peach.vercel.app)  
 - **cli**: local scripts
 
----
-
-## 6️⃣ general development rules (for ais)
+## 8️⃣ development principles
 
 1. check the top-level readme for an overview.  
 2. prioritize speed and simplicity, no bloat.  
@@ -92,25 +130,15 @@ postgres on fly.io with a `Link` table featuring `id`, `url`, `note`, `timestamp
 7. frontend is snappy & minimalistic, no over-engineering.  
 8. keep it personal, avoid corporate “enterprise” style.  
 9. all changes must improve the experience: faster saves, easier retrieval, more useful content.  
-10. if in doubt, ask, “would i actually use this daily?” if no, it’s not worth it.
+10. if in doubt, ask, “would i actually use this daily?” if no, it’s not worth it. 
+11. **"just keep shipping"** - iterate, don’t stall.  
 
----
+## 9️⃣ next steps
 
-## 7️⃣ user auth
+1. build api key store in order to reenable the mobile shortcut capture
+2. build ability to "unread" a link
+3. build a barebones browser extension (one-click `/save`).  
+4. experiment with ai summarization (maybe `post /summarize`).  
+5. keep refining the tabbed sveltekit ui & read-tracking.  
 
-to share stash with friends, we introduce a simple registration/login flow:
-- **user accounts**: store username, hashed password, etc.  
-- **login/registration**: minimal forms or invite-based.  
-- **token-based auth**: generate a token (jwt or similar) on login.  
-- **private stash**: each user sees only their own links.  
-
----
-
-## 8️⃣ next steps
-
-1. finalize user auth in the backend and integrate in the web ui.  
-2. build a barebones browser extension (one-click `/save`).  
-3. experiment with ai summarization (maybe `post /summarize`).  
-4. keep refining the tabbed sveltekit ui & read-tracking.  
-
-that’s it. ephemeral & frictionless.  
+that's it. ephemeral & frictionless.  

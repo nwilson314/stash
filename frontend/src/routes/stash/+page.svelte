@@ -67,8 +67,13 @@
   </script>
   
 <div class="min-h-screen bg-gray-900 text-gray-200">
-    <header class="bg-gray-800 py-4">
-      <h1 class="text-center text-2xl font-bold">stash links</h1>
+    <header class="bg-gray-800 py-4 px-6 flex justify-between items-center">
+        <h1 class="text-2xl font-bold">stash links</h1>
+        <form action="?/logout" method="POST">
+            <button type="submit" class="text-gray-400 hover:text-white">
+                logout
+            </button>
+        </form>
     </header>
   
     <main class="max-w-2xl mx-auto p-4 space-y-4">

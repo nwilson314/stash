@@ -1,4 +1,4 @@
-import { redirect, error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -23,9 +23,6 @@ export const actions: Actions = {
 
     const { access_token } = await res.json();
     
-    console.log("Setting token in login:", access_token ? "present" : "missing");
-    
-    // Properly set the cookie server-side
     cookies.set('token', access_token, {
       path: '/',
       httpOnly: true,
@@ -34,14 +31,6 @@ export const actions: Actions = {
       maxAge: 60 * 60 * 24 * 7 // 1 week
     });
 
-    // Verify cookie was set
-    const verifyToken = cookies.get('token');
-    console.log("Verifying token was set:", verifyToken ? "present" : "missing");
-
-    // Return a redirect instead of throwing it
-    return {
-      status: 303,
-      redirect: '/stash'
-    };
+    throw redirect(303, '/stash');
   }
 };

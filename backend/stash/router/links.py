@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import HTTPException, Depends
 from sqlmodel import Session, select, col
 
+from stash.core.lib import FastApiRouter
 from stash.core.security import get_current_user
 from stash.db import get_session
 from stash.models.links import Link
@@ -8,7 +9,7 @@ from stash.models.users import User
 from stash.schemas.links import LinkCreate
 from stash.schemas.response_models import DELETE_OK, RESPONSE_404
 
-router = APIRouter(
+router = FastApiRouter(
     prefix="/links",
     tags=["links"],
 )

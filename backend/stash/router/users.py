@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import HTTPException, Depends
 from sqlmodel import Session, select
 
+from stash.core.lib import FastApiRouter
 from stash.config import settings
 from stash.core.security import create_access_token, get_password_hash, verify_password
 from stash.db import get_session
@@ -10,7 +11,7 @@ from stash.schemas.security import Token
 from stash.schemas.users import UserCreate
 
 
-router = APIRouter(
+router = FastApiRouter(
     prefix="/users",
     tags=["users"],
 )

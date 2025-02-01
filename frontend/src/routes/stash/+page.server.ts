@@ -1,36 +1,35 @@
 // src/routes/+page.server.ts
 import type { PageServerLoad, Actions } from './$types';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { Link } from '$lib/types';
 
-export const load: PageServerLoad = async ({ cookies, fetch }) => {
-  let token = cookies.get('token')
+export const load: PageServerLoad = async ({ cookies }) => {
+  const token = cookies.get('token');
   if (!token) {
-    throw error(401, 'Unauthorized')
+    throw redirect(303, '/login');
   }
-  const headers = {
-    "Authorization": `Bearer ${token}`,
-    "Content-Type": "application/json",
-    "Accept": "application/json"
-  };
-  
-  console.log("Request headers:", headers);
-  
+
   const res = await fetch('https://stash-link.fly.dev/links', {
     method: 'GET',
-    headers,
-    // Remove credentials since we're using Authorization header
+    headers: {
+      "authorization": `Bearer ${token}`,
+      "Accept": "*/*",
+      "cache-control": "no-cache",
+      'accept-encoding': 'gzip, deflate, br'
+    },
+    credentials: 'include'
   });
 
-  console.log("Response headers:", Object.fromEntries(res.headers.entries()));
-  console.log("Response status:", res.status);
-  const links = await res.json()
-  console.log("fetched links ", links)
-
   if (!res.ok) {
+    if (res.status === 401) {
+      // If the API returns unauthorized, redirect to login
+      cookies.delete('token', { path: '/' }); // Clear the invalid token
+      throw redirect(303, '/login');
+    }
     throw error(res.status, 'Failed to fetch links');
   }
 
+  const links = await res.json();
   return { 
     links: links.map((link: Link) => ({
       id: link.id,
@@ -45,7 +44,7 @@ export const actions: Actions = {
   addLink: async ({ cookies, request }) => {
     const token = cookies.get('token');
     if (!token) {
-      throw error(401, 'Unauthorized');
+      throw redirect(303, '/login');
     }
 
     const data = await request.formData();
@@ -66,6 +65,11 @@ export const actions: Actions = {
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        // If the API returns unauthorized, redirect to login
+        cookies.delete('token', { path: '/' }); // Clear the invalid token
+        throw redirect(303, '/login');
+      }
       throw error(res.status, 'Failed to save link');
     }
 
@@ -75,7 +79,7 @@ export const actions: Actions = {
   markRead: async ({ cookies, request }) => {
     const token = cookies.get('token');
     if (!token) {
-      throw error(401, 'Unauthorized');
+      throw redirect(303, '/login');
     }
 
     const data = await request.formData();
@@ -93,6 +97,11 @@ export const actions: Actions = {
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        // If the API returns unauthorized, redirect to login
+        cookies.delete('token', { path: '/' }); // Clear the invalid token
+        throw redirect(303, '/login');
+      }
       throw error(res.status, 'Failed to mark link as read');
     }
 
@@ -102,7 +111,7 @@ export const actions: Actions = {
   removeLink: async ({ cookies, request }) => {
     const token = cookies.get('token');
     if (!token) {
-      throw error(401, 'Unauthorized');
+      throw redirect(303, '/login');
     }
 
     const data = await request.formData();
@@ -120,9 +129,19 @@ export const actions: Actions = {
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        // If the API returns unauthorized, redirect to login
+        cookies.delete('token', { path: '/' }); // Clear the invalid token
+        throw redirect(303, '/login');
+      }
       throw error(res.status, 'Failed to delete link');
     }
 
     return { success: true, id };
+  },
+
+  logout: async ({ cookies }) => {
+    cookies.delete('token', { path: '/' });
+    throw redirect(303, '/');
   }
 };
