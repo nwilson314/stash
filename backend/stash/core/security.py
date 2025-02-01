@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 import jwt
+from loguru import logger
 from passlib.context import CryptContext
 from sqlmodel import Session, select
 
@@ -11,7 +12,7 @@ from stash.db import get_session
 from stash.models.users import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
 
 def get_password_hash(password: str) -> str:
@@ -19,6 +20,7 @@ def get_password_hash(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    print(f"Verifying password: {plain_password} with hash: {hashed_password}")
     return pwd_context.verify(plain_password, hashed_password)
 
 
@@ -42,9 +44,13 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+    logger.info(f"Getting current user from token: {token}")
+
     try:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        logger.info(f"Payload: {payload}")
         email: str | None = payload.get("sub")
+        logger.info(f"Email: {email}")
         if email is None:
             raise credentials_exception
     except jwt.PyJWTError:

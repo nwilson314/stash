@@ -1,22 +1,12 @@
-// src/routes/+page.server.ts
 import type { PageServerLoad } from './$types';
-import type { Link } from '$lib/types';
+import { redirect } from '@sveltejs/kit';
 
+export const load: PageServerLoad = async ({ cookies }) => {
+    const token = cookies.get('token');
 
-export const load: PageServerLoad = async () => {
-  try {
-    const res = await fetch('https://stash-link.fly.dev/links');
-    const links = await res.json()
-    return { 
-      links: links.map((link: Link) => ({
-        id: link.id,
-        url: link.url,
-        note: link.note,
-        read: link.read
-      }))
-     };
-  } catch (e) {
-    console.error('error fetching links', e);
-    return { links: [] };
-  }
-}
+    if (token) {
+        throw redirect(302, '/stash');
+    }
+
+    return {}; // normal landing page load
+};
