@@ -11,7 +11,7 @@
   </script>
   
   <div class="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center p-6 gap-4">
-    <h1 class="text-3xl font-bold tracking-wide">stash links</h1>
+    <h1 class="text-3xl font-bold tracking-wide">stash</h1>
     <p class="max-w-md text-center text-gray-400">
       ephemeral capturing. frictionless reading. 
       <br />

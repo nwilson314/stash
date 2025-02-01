@@ -2,6 +2,7 @@
     import type { PageProps } from './$types';
     import type { Link } from '$lib/types';
     import { LinkStatusTab } from '$lib/types';
+    import Header from '$lib/Header.svelte';
 
 	let { data }: PageProps = $props();
     let links: Link[] = $state(data.links);
@@ -84,14 +85,7 @@
   </script>
   
 <div class="min-h-screen bg-gray-900 text-gray-200">
-    <header class="bg-gray-800 py-4 px-6 flex justify-between items-center">
-        <h1 class="text-2xl font-bold">stash links</h1>
-        <form action="?/logout" method="POST">
-            <button type="submit" class="text-gray-400 hover:text-white">
-                logout
-            </button>
-        </form>
-    </header>
+    <Header showLogout={true} />
   
     <main class="max-w-2xl mx-auto p-4 space-y-4">
         <!-- add new link form -->
@@ -111,9 +105,9 @@
         />
         <button
             type="submit"
-            class="bg-blue-600 hover:bg-blue-700 text-white rounded px-3 py-1 w-24"
+            class="bg-gray-700 hover:bg-gray-600 text-gray-100 px-3 py-1 rounded w-24 transition-colors font-medium"
         >
-        add
+            add
         </button>
     </form>
       <!-- tabs -->
@@ -134,7 +128,15 @@
         </button>
       </div>
   
-      {#if activeTab === 'unread'}
+      {#if links.length === 0}
+        <div class="text-center py-8">
+          <p class="text-gray-400 mb-4">looks like you're stash-less</p>
+          <a href="/docs" class="inline-block bg-gray-800 hover:bg-gray-700 text-gray-200 px-6 py-3 rounded-lg transition-colors">
+            learn to stash from mobile →
+          </a>
+          <p class="text-sm text-gray-500 italic mt-4">(or start stashing above)</p>
+        </div>
+      {:else if activeTab === 'unread'}
         <!-- unread links -->
         {#each links.filter((l) => !l.read) as link}
           <div class="bg-gray-800 rounded p-4 flex justify-between items-center gap-2">
