@@ -11,15 +11,17 @@ it integrates with **mobile shortcuts**, a **cli**, **obsidian**, and a simple *
 ### 1️⃣ capturing links (input)
 - **mobile**  
   - ios shortcut → share menu sends links to `POST /save`  
-  - *currently disabled due to authentication—future fix pending*
-    - need to build an api key store on the user model -> gonna be janky and probably not rotated. unfortunately, will not be ephemeral
 - **cli**  
   - planned: bash script (`fzf`) for quick saving  
 - **web ui**  
   - minimal sveltekit + tailwind deployment at `stash-peach.vercel.app`  
   - tabbed interface separating **unread** vs. **read** links  
   - inline form to add new links (url + optional note)  
-  - mark read & delete links quickly  
+  - mark read & delete links quickly
+- **docs**
+  - web docs detailing how to create the ios shortcut
+  - browser extension docs (one-click saves) (planned)
+  - obsidian docs (planned)
 - **future**  
   - browser extension (one-click saves)  
   - email forwarding (`stash@mydomain.com`)  
@@ -97,17 +99,18 @@ postgres on fly.io with a `users` table and a `links` table:
 
 **phase 1** (complete-ish):  
 - backend on fly.io (save and retrieve links)  
-- ios shortcut capture *(temporarily broken)*  
+- ios shortcut capture 
 - user authentication & token-based storage  
-- basic db model with user ownership  
+- basic db model with user ownership
+- full web ui with sveltekit (tabs for unread/read)
 
-**phase 2** (ongoing):  
-- full web ui with sveltekit (tabs for unread/read)  
+**phase 2** (ongoing): 
+- browser extension for quick saves
 - auto-categorization & tagging  
 - ai summarization  
 
 **phase 3** (future):  
-- browser extension for quick saves  
+  
 - email-based link capture
 - some sort of obsidian integration
 
@@ -135,10 +138,15 @@ postgres on fly.io with a `users` table and a `links` table:
 
 ## 9️⃣ next steps
 
-1. build api key store in order to reenable the mobile shortcut capture
-2. build ability to "unread" a link
-3. build a barebones browser extension (one-click `/save`).  
-4. experiment with ai summarization (maybe `post /summarize`).  
-5. keep refining the tabbed sveltekit ui & read-tracking.  
+1. build a barebones browser extension (one-click `/save`).
+  a. zen browser (firefox) extension
+  b. chrome extension
+2. experiment with ai summarization (maybe `post /summarize`).
+3. nail down auto categorization, tagging, and title auto-creation. 
+3. keep refining the ui.
+4. build obsidian integration.
+5. add cli picker (`fzf`).
+6. add email-based link capture.
+7. audio to text for spotify/youtube podcasts and vids.
 
 that's it. ephemeral & frictionless.  

@@ -139,14 +139,14 @@
       {:else if activeTab === 'unread'}
         <!-- unread links -->
         {#each links.filter((l) => !l.read) as link}
-          <div class="bg-gray-800 rounded p-4 flex justify-between items-center gap-2">
-            <div class="flex flex-col">
-              <a href={link.url} target="_blank" rel="noreferrer" class="text-blue-400 hover:underline break-all w-64 truncate">
+          <div class="bg-gray-800 rounded p-4 flex flex-col sm:flex-row justify-between gap-3 sm:items-center">
+            <div class="flex flex-col min-w-0">
+              <a href={link.url} target="_blank" rel="noreferrer" class="text-blue-400 hover:underline truncate max-w-full">
                 {link.url}
               </a>
-              <span class="text-sm text-gray-400 italic">{link.note}</span>
+              <span class="text-sm text-gray-400 italic truncate">{link.note}</span>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 shrink-0">
               <button
                 onclick={() => toggleRead(link.id)}
                 class="border border-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-sm text-gray-300"
@@ -176,14 +176,14 @@
       {:else}
         <!-- read links -->
         {#each links.filter((l) => l.read) as link}
-          <div class="bg-gray-800 rounded p-4 flex justify-between items-center gap-2">
-            <div class="flex flex-col">
-              <a href={link.url} target="_blank" rel="noreferrer" class="text-blue-400 hover:underline break-all w-64 truncate">
+          <div class="bg-gray-800 rounded p-4 flex flex-col sm:flex-row justify-between gap-3 sm:items-center">
+            <div class="flex flex-col min-w-0">
+              <a href={link.url} target="_blank" rel="noreferrer" class="text-blue-400 hover:underline truncate max-w-full">
                 {link.url}
               </a>
-              <span class="text-sm text-gray-400 italic">{link.note}</span>
+              <span class="text-sm text-gray-400 italic truncate">{link.note}</span>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 shrink-0">
               <span class="text-gray-500 text-sm">read</span>
               <button
                 onclick={() => toggleRead(link.id)}
