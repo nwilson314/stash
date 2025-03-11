@@ -11,8 +11,10 @@ config = context.config
 
 from sqlmodel import SQLModel
 from stash.config import settings
+from stash.models.categories import Category
 from stash.models.links import Link
 from stash.models.users import User
+
 
 url = settings.DATABASE_URL
 

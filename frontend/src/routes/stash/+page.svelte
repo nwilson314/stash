@@ -31,10 +31,12 @@
             const newLink: Link = {
               id: parsedData[linkDataKeys.id],
               url: parsedData[linkDataKeys.url],
+              title: parsedData[linkDataKeys.title],
               note: parsedData[linkDataKeys.note],
-              read: parsedData[linkDataKeys.read]
+              read: parsedData[linkDataKeys.read],
+              content_type: parsedData[linkDataKeys.content_type],
+              processing_status: parsedData[linkDataKeys.processing_status]
             };
-            console.log(newLink);
             links = [newLink, ...links];
             newUrl = '';
             newNote = '';
@@ -141,10 +143,15 @@
         {#each links.filter((l) => !l.read) as link}
           <div class="bg-gray-800 rounded p-4 flex flex-col sm:flex-row justify-between gap-3 sm:items-center">
             <div class="flex flex-col min-w-0">
-              <a href={link.url} target="_blank" rel="noreferrer" class="text-blue-400 hover:underline truncate max-w-full">
-                {link.url}
+              <a href={link.url} target="_blank" rel="noreferrer" class="text-blue-400 hover:underline truncate max-w-full font-medium">
+                {link.title || link.url}
               </a>
-              <span class="text-sm text-gray-400 italic truncate">{link.note}</span>
+              {#if link.title}
+                <span class="text-xs text-gray-500 truncate">{link.url}</span>
+              {/if}
+              {#if link.note}
+                <span class="text-sm text-gray-400 italic truncate">{link.note}</span>
+              {/if}
             </div>
             <div class="flex gap-2 shrink-0">
               <button
@@ -178,10 +185,15 @@
         {#each links.filter((l) => l.read) as link}
           <div class="bg-gray-800 rounded p-4 flex flex-col sm:flex-row justify-between gap-3 sm:items-center">
             <div class="flex flex-col min-w-0">
-              <a href={link.url} target="_blank" rel="noreferrer" class="text-blue-400 hover:underline truncate max-w-full">
-                {link.url}
+              <a href={link.url} target="_blank" rel="noreferrer" class="text-blue-400 hover:underline truncate max-w-full font-medium">
+                {link.title || link.url}
               </a>
-              <span class="text-sm text-gray-400 italic truncate">{link.note}</span>
+              {#if link.title}
+                <span class="text-xs text-gray-500 truncate">{link.url}</span>
+              {/if}
+              {#if link.note}
+                <span class="text-sm text-gray-400 italic truncate">{link.note}</span>
+              {/if}
             </div>
             <div class="flex gap-2 shrink-0">
               <span class="text-gray-500 text-sm">read</span>

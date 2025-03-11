@@ -7,8 +7,8 @@ from stash.core.security import create_access_token, get_password_hash, verify_p
 from stash.db import get_session
 from stash.models.users import User
 from stash.schemas.response_models import DELETE_OK, RESPONSE_404
-from stash.schemas.security import Token
-from stash.schemas.users import UserCreate
+from stash.schemas.security import AuthResponse, Token
+from stash.schemas.users import UserCreate, UserResponse
 
 
 router = FastApiRouter(
@@ -16,8 +16,8 @@ router = FastApiRouter(
     tags=["users"],
 )
 
-@router.post("/register", response_model=Token)
-def register_user(user: UserCreate, db: Session = Depends(get_session)) -> Token:
+@router.post("/register", response_model=AuthResponse)
+def register_user(user: UserCreate, db: Session = Depends(get_session)) -> AuthResponse:
     if db.exec(select(User).where(User.email == user.email)).first():
         raise HTTPException(status_code=400, detail="Email already registered")
     new_user = User(
@@ -31,11 +31,21 @@ def register_user(user: UserCreate, db: Session = Depends(get_session)) -> Token
         data={"sub": user.email}, expires_delta=settings.JWT_EXPIRE_MINUTES
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return AuthResponse(
+        token=Token(
+            access_token=access_token,
+            token_type="bearer",
+        ),
+        user=UserResponse(
+            id=new_user.id,
+            email=new_user.email,
+            username=new_user.username,
+        )
+    )
 
 
-@router.post("/login", response_model=Token)
-def login_user(user: UserCreate, db: Session = Depends(get_session)) -> Token:
+@router.post("/login", response_model=AuthResponse)
+def login_user(user: UserCreate, db: Session = Depends(get_session)) -> AuthResponse:
     db_user = db.exec(select(User).where(User.email == user.email)).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="Invalid credentials")
@@ -46,7 +56,17 @@ def login_user(user: UserCreate, db: Session = Depends(get_session)) -> Token:
         data={"sub": db_user.email}, expires_delta=settings.JWT_EXPIRE_MINUTES
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return AuthResponse(
+        token=Token(
+            access_token=access_token,
+            token_type="bearer",
+        ),
+        user=UserResponse(
+            id=db_user.id,
+            email=db_user.email,
+            username=db_user.username,
+        )
+    )
 
 @router.delete("/delete", responses=RESPONSE_404)
 def delete_user(user: UserCreate, db: Session = Depends(get_session)) -> None:
