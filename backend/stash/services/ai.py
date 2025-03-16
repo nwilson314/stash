@@ -25,17 +25,15 @@ class AIService:
     
     async def _get_existing_or_create_category(self, db: Session, user_id: int, category_name: str) -> int:
         """Get an existing category ID or create a new one if it doesn't exist."""
-        # Normalize category name (lowercase, strip whitespace)
-        normalized_name = category_name.lower().strip()
         
         # Check if category exists (case insensitive)
         existing = db.exec(
             select(Category).where(
                 Category.user_id == user_id,
-                Category.name == normalized_name
+                Category.name == category_name
             )
         ).first()
-        
+
         if existing:
             return existing.id
         

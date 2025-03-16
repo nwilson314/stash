@@ -23,6 +23,14 @@ def get_links(db: Session = Depends(get_session), current_user: User = Depends(g
     return links
 
 
+@router.get("/{link_id}")
+def get_link(link_id: int, db: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> Link:
+    link = db.exec(select(Link).where(Link.id == link_id, Link.user_id == current_user.id)).first()
+    if not link:
+        raise HTTPException(status_code=404, detail="link not found")
+    return link
+
+
 @router.patch("/{link_id}/read")
 def mark_link_read(link_id: int, db: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     link = db.exec(select(Link).where(Link.id == link_id, Link.user_id == current_user.id)).first()

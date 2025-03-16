@@ -6,6 +6,7 @@ from stash.core.security import get_current_user
 from stash.db import get_session
 from stash.models.categories import Category
 from stash.models.users import User
+from stash.schemas.category import CategoryCreate
 from stash.schemas.response_models import DELETE_OK, RESPONSE_404
 
 router = FastApiRouter(
@@ -30,7 +31,7 @@ async def get_categories(
 
 @router.post("/")
 async def create_category(
-    category: Category,
+    category: CategoryCreate,
     db: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> Category:
@@ -39,7 +40,7 @@ async def create_category(
     existing = db.exec(
         select(Category).where(
             Category.user_id == current_user.id,
-            Category.name.lower() == category.name.lower().strip()
+            Category.name == category.name
         )
     ).first()
     
@@ -57,10 +58,10 @@ async def create_category(
     return new_category
 
 
-@router.put("/{category_id}")
+@router.patch("/{category_id}")
 async def update_category(
     category_id: int,
-    category_data: Category,
+    category_data: CategoryCreate,
     db: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> Category:
@@ -77,11 +78,11 @@ async def update_category(
         raise HTTPException(status_code=404, detail="Category not found")
     
     # Check if new name conflicts with existing category
-    if category_data.name.lower().strip() != category.name.lower():
+    if category_data.name != category.name:
         existing = db.exec(
             select(Category).where(
                 Category.user_id == current_user.id,
-                Category.name.lower() == category_data.name.lower().strip(),
+                Category.name == category_data.name,
                 Category.id != category_id
             )
         ).first()
