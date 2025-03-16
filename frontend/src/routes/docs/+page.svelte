@@ -44,7 +44,9 @@
                         </ul>
                     </li>
                     
-                    <li>Add a <code class="bg-gray-700 px-1 py-0.5 rounded">Get Dictionary Value</code> action to extract the <code class="bg-gray-700 px-1 py-0.5 rounded">access_token</code> from the login response</li>
+                    <li>Add a <code class="bg-gray-700 px-1 py-0.5 rounded">Get Dictionary Value</code> action to extract the <code class="bg-gray-700 px-1 py-0.5 rounded">token</code> from the login response</li>
+
+                    <li>Add a <code class="bg-gray-700 px-1 py-0.5 rounded">Get Dictionary Value</code> action to extract the <code class="bg-gray-700 px-1 py-0.5 rounded">access_token</code> from get token response</li>
                     
                     <li class="space-y-2">
                         Add another <code class="bg-gray-700 px-1 py-0.5 rounded">Get Contents of URL</code> action:
@@ -67,7 +69,7 @@
                 <p class="text-gray-400">Just be sure to update the username and password fields with your own.</p>
                 
                 <div class="mt-8 text-center">
-                    <a href="https://www.icloud.com/shortcuts/aa3aa9f290cd463ab4e2016f3d7c3705" 
+                    <a href="https://www.icloud.com/shortcuts/8185ef405e5247d2a868c9d3f1faed7f" 
                        class="inline-block bg-gray-800 hover:bg-gray-700 text-gray-200 px-6 py-3 rounded-lg transition-colors">
                         ↓ Download the Shortcut
                     </a>

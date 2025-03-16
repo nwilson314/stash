@@ -1,12 +1,13 @@
-from fastapi import HTTPException, Depends
+from fastapi import BackgroundTasks, HTTPException, Depends
 from sqlmodel import Session, select, col
 
 from stash.core.lib import FastApiRouter
 from stash.core.security import get_current_user
 from stash.db import get_session
-from stash.models.links import Link
+from stash.models.links import Link, ProcessingStatus
 from stash.models.users import User
-from stash.services import get_link_service
+from stash.services import get_link_service, get_ai_service
+from stash.services.ai import AIService
 from stash.services.links import LinkService
 from stash.schemas.response_models import DELETE_OK, RESPONSE_404
 
@@ -46,13 +47,16 @@ def delete_link(link_id: int, db: Session = Depends(get_session), current_user: 
 @router.post("/save")
 async def save_link(
     link_data: Link,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
     link_service: LinkService = Depends(get_link_service),
+    ai_service: AIService = Depends(get_ai_service),
 ) -> Link:
     # Process the URL
     metadata = await link_service.process_new_link(link_data.url)
     if metadata.error:
+        print(metadata.error)
         raise HTTPException(status_code=400, detail=metadata.error)
 
     # Create link with processed metadata
@@ -63,11 +67,18 @@ async def save_link(
         content_type=metadata.content_type,
         user_id=current_user.id,
         note=link_data.note,
+        thumbnail_url=metadata.thumbnail_url,
+        author=metadata.author,
+        duration=metadata.duration,
+        processing_status=ProcessingStatus.COMPLETE,
     )
     
     db.add(link)
     db.commit()
     db.refresh(link)
+
+    # Pass the already processed metadata to the AI service
+    background_tasks.add_task(ai_service.process_link, link.id, current_user.id, metadata)
     
     return link
 

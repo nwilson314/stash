@@ -5,10 +5,12 @@ from loguru import logger
 
 from stash.router import links
 from stash.router import users
+from stash.router import categories
 
 app = FastAPI()
 app.include_router(links.router)
 app.include_router(users.router)
+app.include_router(categories.router)
 
 @app.middleware("http")
 async def log_request_origin(request, call_next):
