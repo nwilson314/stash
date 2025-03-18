@@ -111,6 +111,14 @@
                         <p class="text-gray-200">{link.note}</p>
                     </div>
                 {/if}
+                
+                <!-- Short summary section -->
+                {#if link.short_summary}
+                    <div class="mt-4 bg-gray-700 p-3 rounded">
+                        <h3 class="text-sm font-medium text-gray-400 mb-1">Short Summary:</h3>
+                        <p class="text-gray-200">{link.short_summary}</p>
+                    </div>
+                {/if}
             </div>
             
             <!-- Category management -->

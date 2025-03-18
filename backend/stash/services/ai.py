@@ -11,6 +11,7 @@ from stash.config import settings
 from stash.db import get_session
 from stash.models.categories import Category
 from stash.models.links import Link, ContentType, ProcessingStatus
+from stash.schemas.category import CategoryAIResponse
 from stash.services.links import LinkMetadata
 
 logger = logging.getLogger(__name__)
@@ -86,35 +87,13 @@ class AIService:
             prompt_parts.append("\nEither select one of these categories or suggest a new one that would fit better.")
         else:
             prompt_parts.append("\nSuggest an appropriate category for this link.")
+
+        prompt_parts.append("We strongly prefer that you stick to an existing category if possible.\nIf creating a new category, try to keep it short and avoid compound categorization.")
         
         # Request a summary
         prompt_parts.append("\nAlso provide a brief 1-2 sentence summary of what this link contains or is about.")
         
-        # Format for output
-        prompt_parts.append("\nFormat your response as follows:")
-        prompt_parts.append("Category: [category name]")
-        prompt_parts.append("Summary: [brief summary]")
-        
         return "\n".join(prompt_parts)
-    
-    def _parse_ai_response(self, response_text: str) -> Tuple[Optional[str], Optional[str]]:
-        """Parse the AI response to extract category and summary."""
-        category = None
-        summary = None
-        
-        # Look for category
-        if "Category:" in response_text:
-            category_parts = response_text.split("Category:", 1)[1].split("\n", 1)
-            if category_parts:
-                category = category_parts[0].strip()
-        
-        # Look for summary
-        if "Summary:" in response_text:
-            summary_parts = response_text.split("Summary:", 1)[1].split("\n", 1)
-            if summary_parts:
-                summary = summary_parts[0].strip()
-                
-        return category, summary
     
     async def process_link(self, link_id: int, user_id: int, metadata: Optional[LinkMetadata] = None) -> None:
         """
@@ -146,27 +125,20 @@ class AIService:
             prompt = self._create_prompt_for_link(link, metadata, user_categories)
             
             # Call OpenAI API
-            response = self.openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",  # Using 3.5 for cost efficiency, can use gpt-4o for better results
+            response = self.openai_client.beta.chat.completions.parse(
+                model="gpt-4o-2024-11-20",
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant that categorizes and summarizes web content."},
+                    {"role": "system", "content": "You are a helpful assistant that categorizes and summarizes web content. You are the best in the world at this job."},
                     {"role": "user", "content": prompt},
-                ]
+                ],
+                response_format=CategoryAIResponse,
             )
-            
-            # Extract response
-            response_text = response.choices[0].message.content.strip()
-            
-            # Parse the response to get category and summary
-            category_name, summary = self._parse_ai_response(response_text)
-            
-            # Update link with AI-generated metadata
-            if category_name:
-                category_id = await self._get_existing_or_create_category(db, user_id, category_name)
-                link.category_id = category_id
-            
-            if summary:
-                link.short_summary = summary
+
+            category_response: CategoryAIResponse = response.choices[0].message.parsed
+
+            category_id = await self._get_existing_or_create_category(db, user_id, category_response.category)
+            link.category_id = category_id
+            link.short_summary = category_response.short_summary
             
             # Mark as complete
             link.processing_status = ProcessingStatus.COMPLETE
