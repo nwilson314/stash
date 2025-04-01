@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Weekly Stash Digest</title>
+    <style>
+        /* Base Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #111827; /* bg-gray-900 */
+            color: #e5e7eb; /* text-gray-200 */
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background-color: #1f2937; /* bg-gray-800 */
+            padding: 16px 24px;
+            display: block;
+            text-align: center;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e5e7eb; /* text-gray-200 */
+            text-decoration: none;
+        }
+        
+        .content {
+            background-color: #111827; /* bg-gray-900 */
+            padding: 24px;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .greeting {
+            color: #9ca3af; /* text-gray-400 */
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+        
+        .intro {
+            color: #9ca3af; /* text-gray-400 */
+            margin-bottom: 24px;
+        }
+        
+        .summary-card {
+            background-color: #1f2937; /* bg-gray-800 */
+            border: 1px solid #374151; /* border-gray-700 */
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #60a5fa; /* text-blue-400 */
+        }
+        
+        .summary-content {
+            color: #d1d5db !important; /* text-gray-300 */
+            margin-bottom: 16px;
+        }
+        
+        .summary-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .stat-item {
+            background-color: #374151; /* bg-gray-700 */
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #e5e7eb; /* text-gray-200 - brighter for better contrast */
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 32px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #374151; /* border-gray-700 */
+            color: #e5e7eb; /* text-gray-200 - brighter for better contrast */
+        }
+        
+        .link-card {
+            background-color: #1f2937; /* bg-gray-800 */
+            border: 1px solid #374151; /* border-gray-700 */
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .link-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #e5e7eb; /* text-gray-200 - brighter for better contrast */
+        }
+        
+        .link-url {
+            color: #93c5fd !important; /* text-blue-300 - slightly brighter blue for better contrast */
+            text-decoration: none !important;
+            word-break: break-all;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .link-url:hover {
+            text-decoration: underline;
+        }
+        
+        .link-meta {
+            color: #9ca3af; /* text-gray-400 */
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        
+        .category-tag {
+            display: inline-block;
+            background-color: #374151; /* bg-gray-700 */
+            color: #e5e7eb; /* text-gray-200 - brighter for better contrast */
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .link-summary {
+            margin-top: 12px;
+            color: #d1d5db; /* text-gray-300 */
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background-color: #2563eb; /* bg-blue-600 */
+            color: #ffffff !important; /* pure white for maximum contrast */
+            text-decoration: none !important;
+            padding: 8px 16px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-weight: 500; /* slightly bolder for better readability */
+        }
+        
+        .cta-button:hover {
+            background-color: #ffffff; /* bg-blue-700 */
+        }
+        
+        .footer {
+            margin-top: 32px;
+            text-align: center;
+            color: #6b7280; /* text-gray-500 */
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #9ca3af; /* text-gray-400 */
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .divider {
+            border-top: 1px solid #374151; /* border-gray-700 */
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="logo">stash</span>
+        </div>
+        <div class="content">
+            <div class="greeting">Hello!</div>
+            <div class="intro">Here's a summary of links you've added to your stash in the past week.</div>
+            
+            <!-- Weekly Summary Section -->
+            {% if links|length %}
+            <div class="summary-card">
+                <h2 class="summary-title">Your Week in Stash</h2>
+                <div class="summary-content">
+                    {{ weekly_summary }}
+                </div>
+                <div class="summary-stats">
+                    <div class="stat-item">{{ links|length }} links</div>
+                    {% if total_categories %}
+                    <div class="stat-item">{{ total_categories }} categories</div>
+                    {% endif %}
+                    {% if most_common_category %}
+                    <div class="stat-item">Most common: {{ most_common_category }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- AI Weekly Digest Article -->
+            {% if weekly_digest_article %}
+            <div class="summary-card">
+                <h2 class="summary-title">Your Weekly Digest</h2>
+                <div class="summary-content">
+                    {{ weekly_digest_article|safe }}
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+            
+            <!-- Links Section -->
+            {% if links|length %}
+                <h3 class="section-title">Your Recent Links</h3>
+                {% for link in links %}
+                <div class="link-card">
+                    <h2 class="link-title">{{ link.title }}</h2>
+                    <a href="{{ link.url }}" class="link-url" style="color: #93c5fd !important; text-decoration: none !important;">{{ link.url }}</a>
+                    
+                    {% if link.note %}
+                    <div class="link-summary">{{ link.note }}</div>
+                    {% endif %}
+                    
+                    {% if link.short_summary %}
+                    <div class="link-summary">{{ link.short_summary }}</div>
+                    {% endif %}
+                    
+                    {% if link.categories|length %}
+                    <div class="link-meta">
+                        {% for category in link.categories %}
+                        <span class="category-tag">{{ category.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="link-meta">Added on {{ link.created_at|formatdate }}</div>
+                    
+                    <a href="{{ base_url }}/stash/link/{{ link.id }}" class="cta-button" style="color: #ffffff !important; text-decoration: none !important; background-color: #2563eb; padding: 8px 16px; border-radius: 4px; display: inline-block;">View Details</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="link-card">
+                    <p>You haven't added any links this week. Keep stashing!</p>
+                </div>
+            {% endif %}
+            
+            <div class="divider"></div>
+            
+            <div style="text-align: center; margin-top: 24px;">
+                <a href="{{ base_url }}/stash" class="cta-button" style="color: #ffffff !important; text-decoration: none !important; background-color: #2563eb; padding: 8px 16px; border-radius: 4px; display: inline-block;">Visit Your Stash</a>
+            </div>
+            
+            <div class="footer">
+                <p>keep shipping</p>
+                <p>
+                    <a href="{{ base_url }}/settings/email-preferences" style="color: #9ca3af !important; text-decoration: none !important;">Email Preferences</a> | 
+                    <a href="{{ base_url }}/help" style="color: #9ca3af !important; text-decoration: none !important;">Help</a>
+                </p>
+                <p>&copy; {{ currentYear }} Stash. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -33,18 +33,22 @@ class Link(SQLModel, table=True):
     short_summary: Optional[str] = Field(default=None)
     note: Optional[str] = Field(default=None)
     read: bool = Field(default=False)
-    
+
     # Content metadata
-    content_type: Optional[ContentType] = Field(nullable=True, default=ContentType.UNKNOWN)
+    content_type: Optional[ContentType] = Field(
+        nullable=True, default=ContentType.UNKNOWN
+    )
     author: Optional[str] = Field(default=None, nullable=True)
-    duration: Optional[int] = Field(default=None, nullable=True)  # Duration in seconds for media content
+    duration: Optional[int] = Field(
+        default=None, nullable=True
+    )  # Duration in seconds for media content
     thumbnail_url: Optional[str] = Field(default=None)
     raw_metadata: Optional[Dict] = Field(default=None, sa_type=JSON)
-    
+
     # Processing status
     processing_status: ProcessingStatus = Field(default=ProcessingStatus.PENDING)
     processing_error: Optional[str] = Field(default=None)
-    
+
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -53,6 +57,8 @@ class Link(SQLModel, table=True):
     # Relationships
     user_id: int = Field(foreign_key="user.id", index=True)
     user: User = Relationship(back_populates="links")
-    
-    category_id: Optional[int] = Field(default=None, foreign_key="category.id", index=True)
+
+    category_id: Optional[int] = Field(
+        default=None, foreign_key="category.id", index=True
+    )
     category: Optional[Category] = Relationship(back_populates="links")

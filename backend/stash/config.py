@@ -8,6 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "dev"
+    BASE_URL: str = "http://localhost:5173"
 
     # Database Configuration
     CONNECTION_STRING: str = ""
@@ -26,6 +27,16 @@ class Settings(BaseSettings):
 
     # AI
     OPENAI_API_KEY: str = ""
+
+    # Email settings
+    SMTP_SERVER: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    FROM_EMAIL: str = "stash@example.com"
+
+    # Admin settings
+    ADMIN_API_KEY: str = "change_me_in_production"
 
     @property
     def DATABASE_URL(self) -> str:

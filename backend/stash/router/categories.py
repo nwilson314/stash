@@ -39,14 +39,15 @@ async def create_category(
     # Check if category with same name already exists
     existing = db.exec(
         select(Category).where(
-            Category.user_id == current_user.id,
-            Category.name == category.name
+            Category.user_id == current_user.id, Category.name == category.name
         )
     ).first()
-    
+
     if existing:
-        raise HTTPException(status_code=400, detail="Category with this name already exists")
-    
+        raise HTTPException(
+            status_code=400, detail="Category with this name already exists"
+        )
+
     # Create new category
     new_category = Category(
         name=category.name.strip(),
@@ -69,27 +70,28 @@ async def update_category(
     # Get the category
     category = db.exec(
         select(Category).where(
-            Category.id == category_id,
-            Category.user_id == current_user.id
+            Category.id == category_id, Category.user_id == current_user.id
         )
     ).first()
-    
+
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    
+
     # Check if new name conflicts with existing category
     if category_data.name != category.name:
         existing = db.exec(
             select(Category).where(
                 Category.user_id == current_user.id,
                 Category.name == category_data.name,
-                Category.id != category_id
+                Category.id != category_id,
             )
         ).first()
-        
+
         if existing:
-            raise HTTPException(status_code=400, detail="Category with this name already exists")
-    
+            raise HTTPException(
+                status_code=400, detail="Category with this name already exists"
+            )
+
     # Update category
     category.name = category_data.name.strip()
     db.commit()
@@ -107,14 +109,13 @@ async def delete_category(
     # Get the category
     category = db.exec(
         select(Category).where(
-            Category.id == category_id,
-            Category.user_id == current_user.id
+            Category.id == category_id, Category.user_id == current_user.id
         )
     ).first()
-    
+
     if not category:
         return RESPONSE_404
-    
+
     # Delete the category
     db.delete(category)
     db.commit()

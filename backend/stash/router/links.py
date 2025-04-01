@@ -18,22 +18,40 @@ router = FastApiRouter(
 
 
 @router.get("/")
-def get_links(db: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> list[Link]:
-    links = db.exec(select(Link).where(Link.user_id == current_user.id).order_by(col(Link.updated_at).desc())).all()
+def get_links(
+    db: Session = Depends(get_session), current_user: User = Depends(get_current_user)
+) -> list[Link]:
+    links = db.exec(
+        select(Link)
+        .where(Link.user_id == current_user.id)
+        .order_by(col(Link.updated_at).desc())
+    ).all()
     return links
 
 
 @router.get("/{link_id}")
-def get_link(link_id: int, db: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> Link:
-    link = db.exec(select(Link).where(Link.id == link_id, Link.user_id == current_user.id)).first()
+def get_link(
+    link_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> Link:
+    link = db.exec(
+        select(Link).where(Link.id == link_id, Link.user_id == current_user.id)
+    ).first()
     if not link:
         raise HTTPException(status_code=404, detail="link not found")
     return link
 
 
 @router.patch("/{link_id}/read")
-def mark_link_read(link_id: int, db: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
-    link = db.exec(select(Link).where(Link.id == link_id, Link.user_id == current_user.id)).first()
+def mark_link_read(
+    link_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    link = db.exec(
+        select(Link).where(Link.id == link_id, Link.user_id == current_user.id)
+    ).first()
     if not link:
         raise HTTPException(status_code=404, detail="link not found")
     link.read = not link.read
@@ -43,8 +61,14 @@ def mark_link_read(link_id: int, db: Session = Depends(get_session), current_use
 
 
 @router.delete("/{link_id}", response_model=dict[str, bool], responses=RESPONSE_404)
-def delete_link(link_id: int, db: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> None:
-    db_link = db.exec(select(Link).where(Link.id == link_id, Link.user_id == current_user.id)).first()
+def delete_link(
+    link_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    db_link = db.exec(
+        select(Link).where(Link.id == link_id, Link.user_id == current_user.id)
+    ).first()
     if not db_link:
         raise HTTPException(status_code=404, detail="link not found")
     db.delete(db_link)
@@ -80,25 +104,29 @@ async def save_link(
         duration=metadata.duration,
         processing_status=ProcessingStatus.COMPLETE,
     )
-    
+
     db.add(link)
     db.commit()
     db.refresh(link)
 
     # Pass the already processed metadata to the AI service
-    background_tasks.add_task(ai_service.process_link, link.id, current_user.id, metadata)
-    
+    background_tasks.add_task(
+        ai_service.process_link, link.id, current_user.id, metadata
+    )
+
     return link
 
 
 @router.post("/migrate-orphaned-links", response_model=dict[str, int])
-def migrate_orphaned_links(db: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> dict[str, int]:
+def migrate_orphaned_links(
+    db: Session = Depends(get_session), current_user: User = Depends(get_current_user)
+) -> dict[str, int]:
     """Temporary endpoint to migrate links without a user_id to the current user."""
     orphaned_links = db.exec(select(Link).where(Link.user_id == None)).all()
     count = len(orphaned_links)
-    
+
     for link in orphaned_links:
         link.user_id = current_user.id
-    
+
     db.commit()
     return {"migrated_count": count}

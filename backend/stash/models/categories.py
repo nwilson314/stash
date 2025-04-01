@@ -17,5 +17,5 @@ class Category(SQLModel, table=True):
 
     user_id: int = Field(foreign_key="user.id", index=True)
     user: User = Relationship(back_populates="categories")
-    
+
     links: List["Link"] = Relationship(back_populates="category")

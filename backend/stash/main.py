@@ -6,21 +6,25 @@ from loguru import logger
 from stash.router import links
 from stash.router import users
 from stash.router import categories
+from stash.router import admin
 
 app = FastAPI()
 app.include_router(links.router)
 app.include_router(users.router)
 app.include_router(categories.router)
+app.include_router(admin.router)
+
 
 @app.middleware("http")
 async def log_request_origin(request, call_next):
     # Keep logging minimal but informative for monitoring
     logger.info(f"Incoming request: {request.method} {request.url}")
     logger.info(f"Headers: {request.headers}")
-    origin = request.headers.get('origin', 'Unknown')
+    origin = request.headers.get("origin", "Unknown")
     logger.info(f"{request.method} {request.url.path} from {origin}")
     response = await call_next(request)
     return response
+
 
 if settings.ENVIRONMENT == "dev":
     logger.info("Running in development mode - CORS enabled for development origins")
@@ -29,7 +33,7 @@ if settings.ENVIRONMENT == "dev":
         allow_origins=[
             "http://localhost:3000",  # Local development
             "http://localhost:5173",  # Vite default port
-            "https://stash-peach.vercel.app"  # Production deployment
+            "https://stash-peach.vercel.app",  # Production deployment
         ],
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],

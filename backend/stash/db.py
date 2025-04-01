@@ -5,11 +5,7 @@ from stash.config import settings
 from loguru import logger
 
 # Create database engine
-engine = create_engine(
-    settings.DATABASE_URL, 
-    echo=False,
-    pool_pre_ping=True
-)
+engine = create_engine(settings.DATABASE_URL, echo=False, pool_pre_ping=True)
 
 
 def get_session():

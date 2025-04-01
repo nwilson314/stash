@@ -31,11 +31,17 @@ class TestUrlCleaning:
     def test_preserves_valid_query_params(self, link_service):
         """Test that non-tracking query parameters are preserved."""
         # Test with a single parameter
-        assert link_service._clean_url("example.com?id=123") == "https://example.com?id=123"
-        
+        assert (
+            link_service._clean_url("example.com?id=123")
+            == "https://example.com?id=123"
+        )
+
         # Test with multiple parameters
         url = "example.com?id=123&page=1&sort=desc"
-        assert link_service._clean_url(url) == "https://example.com?id=123&page=1&sort=desc"
+        assert (
+            link_service._clean_url(url)
+            == "https://example.com?id=123&page=1&sort=desc"
+        )
 
     def test_removes_tracking_params(self, link_service):
         """Test that tracking parameters are removed."""
@@ -55,10 +61,10 @@ class TestUrlCleaning:
         """Test handling of malformed query parameters."""
         # Test empty parameter
         assert link_service._clean_url("example.com?") == "https://example.com"
-        
+
         # Test parameter without value
         assert link_service._clean_url("example.com?key") == "https://example.com"
-        
+
         # Test parameter with empty value
         assert link_service._clean_url("example.com?key=") == "https://example.com?key="
 

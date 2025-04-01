@@ -19,6 +19,10 @@ class User(SQLModel, table=True):
     allow_ai_create_categories: bool = Field(default=False)
     ai_confidence_threshold: float = Field(default=0.8)
 
+    # Newsletter preferences
+    newsletter_enabled: bool = Field(default=False)
+    newsletter_frequency: str = Field(default="weekly")  # weekly, biweekly, monthly
+
     # Relationships
     links: List["Link"] = Relationship(back_populates="user")
     categories: List["Category"] = Relationship(back_populates="user")

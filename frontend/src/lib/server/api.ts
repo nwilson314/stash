@@ -15,8 +15,8 @@ export class ApiError extends Error {
 }
 
 export class ApiClient {
-  // private baseUrl = 'http://localhost:8000';
-  private baseUrl = 'https://stash-link.fly.dev';
+  private baseUrl = 'http://localhost:8000';
+  // private baseUrl = 'https://stash-link.fly.dev';
   private token: string;
 
   constructor(token: string) {
