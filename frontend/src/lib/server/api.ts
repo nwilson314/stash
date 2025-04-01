@@ -1,6 +1,5 @@
 import { redirect } from '@sveltejs/kit';
 import type { Cookies } from '@sveltejs/kit';
-import { validateSession } from './auth';
 
 // API Error class for consistent error handling
 export class ApiError extends Error {
@@ -15,8 +14,12 @@ export class ApiError extends Error {
 }
 
 export class ApiClient {
-  private baseUrl = 'http://localhost:8000';
-  // private baseUrl = 'https://stash-link.fly.dev';
+  // Use a getter for baseUrl to ensure it's evaluated at runtime
+  private get baseUrl(): string {
+    return typeof import.meta.env !== 'undefined' && import.meta.env.PUBLIC_API_URL
+      ? import.meta.env.PUBLIC_API_URL
+      : 'http://localhost:8000';
+  }
   private token: string;
 
   constructor(token: string) {
