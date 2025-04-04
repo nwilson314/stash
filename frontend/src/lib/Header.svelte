@@ -8,10 +8,13 @@
         <a href="/docs" class="text-gray-400 hover:text-white">docs</a>
     </div>
     {#if showLogout}
-        <form action="?/logout" method="POST">
-            <button type="submit" class="text-gray-400 hover:text-white">
-                logout
-            </button>
-        </form>
+        <div class="flex items-center gap-4">
+            <a href="/profile" class="text-gray-400 hover:text-white">profile</a>
+            <form action="?/logout" method="POST">
+                <button type="submit" class="text-gray-400 hover:text-white">
+                    logout
+                </button>
+            </form>
+        </div>
     {/if}
 </header>

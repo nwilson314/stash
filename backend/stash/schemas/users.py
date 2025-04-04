@@ -7,7 +7,13 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserPassword(BaseModel):
+    password: str
+    new_password: str
+
+
 class UserUpdate(BaseModel):
+    username: str | None = None
     email: EmailStr | None = None
     allow_ai_categorization: bool | None = None
     allow_ai_create_categories: bool | None = None

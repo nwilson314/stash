@@ -8,12 +8,12 @@ export type ValidSession = {
 };
 
 export async function validateSession(cookies: Cookies): Promise<ValidSession> {
-  const token = cookies.get('roastnotes_token');
+  const token = cookies.get('stash_token');
   if (!token) {
     throw redirect(303, '/auth/logout');
   }
 
-  const user_str = cookies.get('roastnotes_user');
+  const user_str = cookies.get('stash_user');
   if (!user_str) {
     throw redirect(303, '/auth/logout');
   }
@@ -23,20 +23,20 @@ export async function validateSession(cookies: Cookies): Promise<ValidSession> {
     return { user, token };
   } catch (e) {
     // If we can't parse the user data, clear cookies and redirect
-    cookies.delete('roastnotes_token', { path: '/' });
-    cookies.delete('roastnotes_user', { path: '/' });
+    cookies.delete('stash_token', { path: '/' });
+    cookies.delete('stash_user', { path: '/' });
     throw redirect(303, '/auth/logout');
   }
 }
 
 
 export async function checkSession(cookies: Cookies): Promise<ValidSession> {
-  const token = cookies.get('roastnotes_token');
+  const token = cookies.get('stash_token');
   if (!token) {
     return { user: null, token: null };
   }
 
-  const user_str = cookies.get('roastnotes_user');
+  const user_str = cookies.get('stash_user');
   if (!user_str) {
     return { user: null, token: null };
   }
@@ -46,8 +46,8 @@ export async function checkSession(cookies: Cookies): Promise<ValidSession> {
     return { user, token };
   } catch (e) {
     // If we can't parse the user, return null session
-    cookies.delete('roastnotes_token', { path: '/' });
-    cookies.delete('roastnotes_user', { path: '/' });
+    cookies.delete('stash_token', { path: '/' });
+    cookies.delete('stash_user', { path: '/' });
     return { user: null, token: null };
   }
 }

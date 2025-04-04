@@ -1,3 +1,4 @@
+from collections import defaultdict
 from fastapi import HTTPException, Depends
 from sqlmodel import Session, select
 
@@ -11,16 +12,69 @@ from stash.core.security import (
 )
 from stash.db import get_session
 from stash.models.users import User
-from stash.schemas.response_models import DELETE_OK, RESPONSE_404
+from stash.models.links import Link
+from stash.schemas.links import LinkActivity
+from stash.schemas.response_models import DELETE_OK, RESPONSE_404, UPDATE_OK
 from stash.schemas.security import AuthResponse, Token
-from stash.schemas.users import UserCreate, UserResponse, UserUpdate
-from stash.schemas.newsletter import NewsletterPreferences
+from stash.schemas.users import UserCreate, UserResponse, UserUpdate, UserPassword
 
 
 router = FastApiRouter(
     prefix="/users",
     tags=["users"],
 )
+
+
+@router.get("/{user_id}")
+def get_user(
+    user_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    db_user = db.exec(select(User).where(User.id == user_id)).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    print(db_user)
+    return db_user
+
+
+@router.patch("/{user_id}")
+def patch_user(
+    user_update: UserUpdate,
+    user_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    db_user = db.exec(select(User).where(User.id == user_id)).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    update_date = user_update.model_dump(exclude_none=True)
+    for key, value in update_date.items():
+        setattr(db_user, key, value)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+@router.get("/{user_id}/activity")
+def get_user_activity(
+    user_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> LinkActivity:
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    db_links = db.exec(select(Link).where(Link.user_id == user_id)).all()
+    link_data = defaultdict(int)
+    for link in db_links:
+        link_data[link.created_at.strftime("%Y-%m-%d")] += 1
+    return LinkActivity(days=link_data)
 
 
 @router.post("/register", response_model=AuthResponse)
@@ -78,80 +132,34 @@ def login_user(user: UserCreate, db: Session = Depends(get_session)) -> AuthResp
     )
 
 
-@router.delete("/delete", responses=RESPONSE_404)
-def delete_user(user: UserCreate, db: Session = Depends(get_session)) -> None:
-    db_user = db.exec(select(User).where(User.email == user.email)).first()
+@router.delete("/{user_id}", responses=RESPONSE_404)
+def delete_user(user_id: int, db: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> None:
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    db_user = db.exec(select(User).where(User.id == user_id)).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    # if not verify_password(user.password, db_user.hashed_password):
-    #     raise HTTPException(status_code=401, detail="Invalid credentials")
     db.delete(db_user)
     db.commit()
     return DELETE_OK
 
 
-@router.patch("/newsletter-preferences")
-def update_newsletter_preferences(
-    preferences: NewsletterPreferences,
+@router.patch("/update-password", responses=RESPONSE_404)
+def update_password(
+    user_pass: UserPassword,
     db: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user),
-) -> dict:
-    """Update a user's newsletter preferences"""
-    # Validate frequency
-    valid_frequencies = ["weekly", "biweekly", "monthly"]
-    if preferences.frequency not in valid_frequencies:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Frequency must be one of: {', '.join(valid_frequencies)}",
-        )
-
-    # Update user preferences
-    current_user.newsletter_enabled = preferences.enabled
-    current_user.newsletter_frequency = preferences.frequency
-    db.commit()
-
-    return {
-        "status": "success",
-        "message": "Newsletter preferences updated",
-        "preferences": {
-            "enabled": current_user.newsletter_enabled,
-            "frequency": current_user.newsletter_frequency,
-        },
-    }
-
-
-@router.get("/newsletter-preferences")
-def get_newsletter_preferences(
-    db: Session = Depends(get_session), current_user: User = Depends(get_current_user)
-) -> dict:
-    """Get a user's newsletter preferences"""
-    return {
-        "enabled": current_user.newsletter_enabled,
-        "frequency": current_user.newsletter_frequency,
-    }
-
-@router.get("/")
-def get_all_users(
-    db: Session = Depends(get_session),
-) -> list[User]:
-    return db.exec(select(User)).all()
-
-
-@router.patch("/{user_id}")
-def patch_user(
-    user_update: UserUpdate,
-    user_id: int,
-    db: Session = Depends(get_session)
-) -> User:
-    db_user = db.exec(select(User).where(User.id == user_id)).first()
+    user: User = Depends(get_current_user),
+) -> None:
+    db_user = db.exec(select(User).where(User.id == user.id)).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    update_date = user_update.model_dump(exclude_none=True)
-    for key, value in update_date.items():
-        setattr(db_user, key, value)
+
+    if not verify_password(user_pass.password, db_user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    db_user.hashed_password = get_password_hash(user_pass.new_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return db_user
-        
+    return UPDATE_OK
+    
+    

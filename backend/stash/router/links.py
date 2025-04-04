@@ -4,6 +4,7 @@ from sqlmodel import Session, select, col
 from stash.core.lib import FastApiRouter
 from stash.core.security import get_current_user
 from stash.db import get_session
+from stash.models.categories import Category
 from stash.models.links import Link, ProcessingStatus
 from stash.models.users import User
 from stash.services import get_link_service, get_ai_service
@@ -55,6 +56,31 @@ def mark_link_read(
     if not link:
         raise HTTPException(status_code=404, detail="link not found")
     link.read = not link.read
+    db.commit()
+    db.refresh(link)
+    return link
+
+
+@router.patch("/{link_id}/category")
+def update_link_category(
+    link_id: int,
+    category_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> Link:
+    link = db.exec(
+        select(Link).where(Link.id == link_id, Link.user_id == current_user.id)
+    ).first()
+    if not link:
+        raise HTTPException(status_code=404, detail="link not found")
+    if category_id < 0:
+        link.category_id = None
+        db.commit()
+        db.refresh(link)
+        return link
+    if not db.exec(select(Category).where(Category.id == category_id)).first():
+        raise HTTPException(status_code=404, detail="category not found")
+    link.category_id = category_id
     db.commit()
     db.refresh(link)
     return link

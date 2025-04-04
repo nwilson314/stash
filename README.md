@@ -18,11 +18,22 @@ it integrates with **mobile shortcuts**, a **cli**, **obsidian**, a simple **web
   - tabbed interface separating **unread** vs. **read** links
   - inline form to add new links (url + optional note)
   - mark read & delete links quickly
+  - **link details page** with full information and category management
 - **firefox extension**  
   - one-click saving from the toolbar and via a hotkey
   - integrated login that stores the access token for bearer auth
   - built using a non-persistent event page (minimal overhead)
   - submitted to mozilla addons (check for approval & updates)
+
+### 2️⃣ organizing content
+- **categories**
+  - create custom categories to organize links
+  - assign links to categories manually or via ai
+  - filter your stash by category
+- **ai-powered features**
+  - automatic link categorization
+  - ai-generated short summaries for quick context
+  - weekly digest newsletters of your saved content
 
 ---
 
@@ -35,15 +46,21 @@ it integrates with **mobile shortcuts**, a **cli**, **obsidian**, a simple **web
 - `GET /links` → retrieve all saved links *(requires authentication)*  
 - `PATCH /links/{id}/read` → mark a link as read *(requires authentication)*  
 - `DELETE /links/{id}` → remove a link *(requires authentication)*  
+- `GET /links/{id}` → get link details *(requires authentication)*
+- `GET /categories` → get all categories *(requires authentication)*
+- `POST /categories` → create a new category *(requires authentication)*
+- `POST /links/{id}/category` → assign a category to a link *(requires authentication)*
+- `PATCH /users/newsletter` → update newsletter preferences *(requires authentication)*
 
 ### planned api endpoints
 - `POST /summarize` → ai-generated summary of a link
 
 ### database model
-postgres on fly.io with a `users` table and a `links` table:
+postgres on fly.io with `users`, `links`, and `categories` tables:
 
-- `users` table stores `id`, `email`, `hashed_password`, and an optional `api_key`
-- `links` table stores `id`, `user_id` (foreign key), `url`, `note`, `timestamp`, and `read` status
+- `users` table stores `id`, `email`, `hashed_password`, `api_key` (optional), and ai/newsletter preferences
+- `links` table stores `id`, `user_id` (foreign key), `url`, `note`, `timestamp`, `read` status, `title`, `category_id`, and ai-generated data
+- `categories` table stores `id`, `user_id` (foreign key), `name`, and `created_at`
 
 ### orm & migration
 - using **sqlmodel**
@@ -55,10 +72,14 @@ postgres on fly.io with a `users` table and a `links` table:
 
 - **obsidian sync**: python script fetches `GET /links` and writes to a markdown file
 - **web ui**: sveltekit + tailwind at `link-stash.app`
+  - filter by category
+  - view detailed link information
+  - manage categories
 - **cli picker**: (planned) open links interactively using `fzf`
-- **future**:  
-  - ai summarization  
-  - category tagging
+- **ai features**:  
+  - automatic categorization  
+  - short summaries for quick context
+  - weekly digest newsletters
 
 ---
 
@@ -83,32 +104,43 @@ postgres on fly.io with a `users` table and a `links` table:
 ### landing page
 - dark theme, minimal styling
 - auto-redirects users to `/stash` if already logged in
+- showcases core features and value proposition
 
 ### stash ui
 - displays **unread & read** links
 - uses **server-side load (`+page.server.ts`)** to fetch links securely
 - logout button in the top right
+- category filtering
+- link details page for full information
+
+### documentation
+- dedicated page explaining how to use stash
+- information about browser extensions
+- api documentation
 
 ---
 
 ## 🔹 roadmap
 
-**phase 1** (complete-ish):  
+**phase 1** (complete):  
 - backend on fly.io (save and retrieve links)
 - ios shortcut capture 
 - user authentication & token-based storage
 - basic db model with user ownership
 - full web ui with sveltekit (tabs for unread/read)
-- **firefox extension for quick saves** (completed & submitted)
+- firefox extension for quick saves (completed & submitted)
 
-**phase 2** (ongoing): 
+**phase 2** (mostly complete): 
 - chrome extension for quick saves (planned)
-- auto-categorization & tagging
-- ai summarization
+- auto-categorization & tagging (completed)
+- ai summarization (completed)
+- link details page (completed)
+- weekly digest newsletters (completed)
 
 **phase 3** (future):  
 - email-based link capture
 - some sort of obsidian integration
+- audio to text for spotify/youtube podcasts and vids
 
 ---
 
@@ -142,8 +174,8 @@ postgres on fly.io with a `users` table and a `links` table:
 1. maintain and iterate on the firefox extension  
    - monitor user feedback and update as needed
 2. build the chrome extension (planned)
-3. experiment with ai summarization (maybe `POST /summarize`)
-4. nail down auto-categorization, tagging, and title auto-creation
+3. refine ai summarization and categorization
+4. improve newsletter generation and delivery
 5. keep refining the ui
 6. build obsidian integration
 7. add cli picker (`fzf`)

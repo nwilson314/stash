@@ -1,5 +1,5 @@
 import { redirect, error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, Actions } from './$types';
 import { ApiClient, ApiError } from '$lib/server/api';
 import type { Link, Category } from '$lib/types';
 
@@ -33,5 +33,12 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
       }
     }
     throw error(500, 'Failed to load link details');
+  }
+}
+
+export const actions: Actions = {
+  logout: async ({ cookies }) => {
+    cookies.delete('stash_token', { path: '/' });
+    throw redirect(303, '/');
   }
 };

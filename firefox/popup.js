@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
           })
           .then(data => {
             // store the token for later use
-            chrome.storage.local.set({ accessToken: data.access_token, loggedIn: true }, () => {
+            chrome.storage.local.set({ accessToken: data.token.access_token, loggedIn: true }, () => {
               loginForm.style.display = 'none';
               saveUi.style.display = 'block';
             });

@@ -94,7 +94,7 @@ export class ApiClient {
 
 // Helper to create an API client from cookies
 export async function createApiClient(cookies: Cookies): Promise<ApiClient> {
-  const token = cookies.get('roastnotes_token');
+  const token = cookies.get('stash_token');
   if (!token) {
     throw redirect(303, '/login');
   }

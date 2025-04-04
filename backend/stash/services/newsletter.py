@@ -32,9 +32,9 @@ class NewsletterService:
         self.template_env = Environment(
             loader=FileSystemLoader(template_dir), autoescape=True
         )
-        
+
         # Add custom filters
-        self.template_env.filters['formatdate'] = self._format_date
+        self.template_env.filters["formatdate"] = self._format_date
 
     def _format_date(self, date):
         """Format a date for display in templates"""
@@ -43,7 +43,7 @@ class NewsletterService:
                 date = datetime.fromisoformat(date)
             except ValueError:
                 return date
-        
+
         if isinstance(date, datetime):
             return date.strftime("%b %d, %Y")
         return str(date)
@@ -58,11 +58,11 @@ class NewsletterService:
         """Convert markdown text to HTML"""
         if not markdown_text:
             return ""
-        
+
         # Convert markdown to HTML
         html = markdown.markdown(
             markdown_text,
-            extensions=['extra', 'nl2br']  # 'extra' includes tables, fenced code, etc.
+            extensions=["extra", "nl2br"],  # 'extra' includes tables, fenced code, etc.
         )
         return html
 
@@ -195,8 +195,10 @@ class NewsletterService:
 
             # If we have a weekly digest article from AI, convert it from markdown to HTML
             if newsletter_data.get("weekly_digest_article"):
-                newsletter_data["weekly_digest_article"] = self._convert_markdown_to_html(
-                    newsletter_data["weekly_digest_article"]
+                newsletter_data["weekly_digest_article"] = (
+                    self._convert_markdown_to_html(
+                        newsletter_data["weekly_digest_article"]
+                    )
                 )
 
             # Render HTML

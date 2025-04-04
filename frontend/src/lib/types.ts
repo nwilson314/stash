@@ -2,6 +2,14 @@ export interface UserResponse {
     id: number;
     username: string;
     email: string;
+    created_at?: string;
+    
+    // AI preferences
+    allow_ai_categorization: boolean;
+    allow_ai_create_categories: boolean;
+    ai_confidence_threshold: number;
+    newsletter_enabled: boolean;
+    newsletter_frequency: string; // always weekly for now
 }
 
 export interface Token {
@@ -70,4 +78,10 @@ export interface Category {
 export enum LinkStatusTab {
     Read = 'read', 
     Unread = 'unread'
+}
+
+export interface LinkActivity {
+    days: {
+        [date: string]: number;  // date in YYYY-MM-DD format, value is count of links added that day
+    };
 }

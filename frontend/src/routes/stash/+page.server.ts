@@ -225,8 +225,7 @@ export const actions: Actions = {
 
     try {
       // If categoryId is empty, set it to null to remove the category
-      const payload = { category_id: categoryId ? parseInt(categoryId) : null };
-      await api.patch(`/links/${id}`, payload);
+      await api.patch(`/links/${id}/category?category_id=${categoryId || -1}`, {});
       return { success: true };
     } catch (e) {
       if (e instanceof ApiError) {

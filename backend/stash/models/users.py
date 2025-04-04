@@ -1,4 +1,5 @@
 from typing import Optional, TYPE_CHECKING, List
+from datetime import datetime
 
 from pydantic import EmailStr
 from sqlmodel import SQLModel, Relationship, Field
@@ -13,6 +14,8 @@ class User(SQLModel, table=True):
     username: Optional[str] = Field(nullable=True)
     email: EmailStr = Field(index=True, nullable=False)
     hashed_password: str = Field(nullable=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     # AI preferences
     allow_ai_categorization: bool = Field(default=True)
@@ -21,7 +24,7 @@ class User(SQLModel, table=True):
 
     # Newsletter preferences
     newsletter_enabled: bool = Field(default=False)
-    newsletter_frequency: str = Field(default="weekly")  # weekly, biweekly, monthly
+    newsletter_frequency: str = Field(default="weekly")  # always weekly for now
 
     # Relationships
     links: List["Link"] = Relationship(back_populates="user")

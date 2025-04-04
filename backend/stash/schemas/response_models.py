@@ -1,6 +1,7 @@
 from typing import Union, Any
 
 
+UPDATE_OK: dict[str, bool] = {"ok": True}
 DELETE_OK: dict[str, bool] = {"ok": True}
 RESPONSE_404: dict[Union[int, str], dict[str, Any]] = {
     404: {
