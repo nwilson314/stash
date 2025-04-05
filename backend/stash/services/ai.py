@@ -308,7 +308,8 @@ class AIService:
         
         try:
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o",  # Using slightly better model for summaries
+                model="o3-mini",  # Using slightly better model for summaries
+                reasoning_effort="medium",
                 messages=[
                     {
                         "role": "system",
@@ -316,8 +317,7 @@ class AIService:
                     },
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.7,
-                max_tokens=1500,  # Keep summaries relatively short
+                max_completion_tokens=3000,
             )
             
             summary = response.choices[0].message.content.strip()

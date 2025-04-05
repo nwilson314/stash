@@ -42,6 +42,8 @@ async def get_link(
     ).first()
     if not link:
         raise HTTPException(status_code=404, detail="link not found")
+
+    print(link)
     return link
 
 
