@@ -3,10 +3,19 @@
     import type { Link, Category } from '$lib/types';
     import Header from '$lib/Header.svelte';
     import { goto } from '$app/navigation';
+    import { marked } from 'marked';
     
     let { data }: PageProps = $props();
     let link: Link = $state(data.link);
     let categories: Category[] = $state(data.categories);
+    let isGeneratingSummary = $state(false);
+    let summaryError = $state('');
+    
+    // Convert markdown to HTML
+    function renderMarkdown(markdown: string): string {
+        if (!markdown) return '';
+        return marked.parse(markdown) as string;
+    }
     
     // Function to get category name by id
     function getCategoryName(categoryId: number | undefined): string {
@@ -68,6 +77,39 @@
             goto('/stash');
         } else {
             console.error('Failed to delete link:', await res.text());
+        }
+    }
+    
+    // Generate AI summary
+    async function generateSummary() {
+        isGeneratingSummary = true;
+        summaryError = '';
+        
+        try {
+            const formData = new FormData();
+            formData.append('linkId', link.id);
+            
+            const res = await fetch(`?/generateSummary`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const result = await res.json();
+                const parsedData = JSON.parse(result.data);
+                const linkDataKeys = parsedData[0];
+                const summary = parsedData[linkDataKeys.summary];
+                
+                link = { ...link, summary };
+            } else {
+                console.error('Failed to generate summary:', await res.text());
+                summaryError = 'Failed to generate summary';
+            }
+        } catch (e) {
+            console.error('Error generating summary:', e);
+            summaryError = 'An unexpected error occurred';
+        } finally {
+            isGeneratingSummary = false;
         }
     }
     
@@ -136,12 +178,50 @@
                 </select>
             </div>
             
-            <!-- Future AI summary section -->
+            <!-- AI summary section -->
             <div class="pt-4 border-t border-gray-700">
-                <h3 class="text-sm font-medium text-gray-400 mb-2">AI Summary:</h3>
-                <div class="bg-gray-700 p-3 rounded text-gray-400 italic">
-                    AI summary will be integrated here in a future update.
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-medium text-gray-400">AI Summary:</h3>
+                    {#if !isGeneratingSummary}
+                        <button 
+                            onclick={generateSummary}
+                            class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors"
+                        >
+                            {link.summary ? 'Regenerate' : 'Generate Summary'}
+                        </button>
+                    {/if}
                 </div>
+                
+                {#if isGeneratingSummary}
+                    <div class="bg-gray-700 p-4 rounded flex items-center justify-center">
+                        <div class="animate-pulse flex space-x-2">
+                            <div class="h-2 w-2 bg-blue-400 rounded-full"></div>
+                            <div class="h-2 w-2 bg-blue-400 rounded-full"></div>
+                            <div class="h-2 w-2 bg-blue-400 rounded-full"></div>
+                        </div>
+                        <span class="ml-3 text-gray-300">Generating AI summary...</span>
+                    </div>
+                {:else if link.summary}
+                    <div class="bg-gray-700 p-3 rounded">
+                        <div class="text-gray-200 prose prose-sm prose-invert max-w-none">
+                            {@html renderMarkdown(link.summary)}
+                        </div>
+                    </div>
+                {:else if summaryError}
+                    <div class="bg-red-900/30 border border-red-800 p-3 rounded text-red-300">
+                        <p>{summaryError}</p>
+                        <button 
+                            onclick={generateSummary}
+                            class="mt-2 text-sm text-gray-400 hover:text-gray-200"
+                        >
+                            Try again
+                        </button>
+                    </div>
+                {:else}
+                    <div class="bg-gray-700 p-3 rounded text-gray-400">
+                        <p>No summary available. Generate one with AI to get a quick overview of this link's content.</p>
+                    </div>
+                {/if}
             </div>
             
             <!-- Actions -->

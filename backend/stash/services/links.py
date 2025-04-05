@@ -3,6 +3,7 @@ from urllib.parse import urlparse, urlunparse, parse_qs
 import re
 import html
 
+from bs4 import BeautifulSoup
 import httpx
 from pydantic import BaseModel, HttpUrl
 
@@ -332,10 +333,31 @@ class LinkService:
         except Exception as e:
             return LinkMetadata(url=clean_url, error=str(e))
 
-    async def enrich_link(self, link: Link) -> None:
-        """Enrich a link with additional metadata.
 
-        This is meant to run in the background and can take longer.
-        It will update the link record when done.
+    async def extract_main_content(self, metadata: LinkMetadata) -> str:
         """
-        pass
+        Extract the main content from a link's metadata.
+        """
+        if not metadata.content:
+            return ""
+        
+        soup = BeautifulSoup(metadata.content, 'html.parser')
+
+        for element in soup.select('nav, header, footer, aside, script, style, iframe, .ads, .comments, .sidebar'):
+            element.decompose()
+        
+        # Look for main content containers
+        main_content = soup.select_one('main, article, .content, #content, .post, .article')
+        # If no main content container found, use the body
+        if not main_content:
+            main_content = soup.body
+        
+        # Extract text, preserving paragraph structure
+        if main_content:
+            paragraphs = main_content.find_all('p')
+            if paragraphs:
+                return "\n\n".join(p.get_text().strip() for p in paragraphs if len(p.get_text().strip()) > 40)
+        
+        # Fallback to a simple text extraction with minimal formatting
+        text = re.sub(r'\s+', ' ', soup.get_text()).strip()
+        return text

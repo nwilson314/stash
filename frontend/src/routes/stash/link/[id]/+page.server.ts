@@ -40,5 +40,43 @@ export const actions: Actions = {
   logout: async ({ cookies }) => {
     cookies.delete('stash_token', { path: '/' });
     throw redirect(303, '/');
+  },
+  
+  generateSummary: async ({ request, cookies, params }) => {
+    const token = cookies.get('stash_token');
+    if (!token) {
+      throw redirect(303, '/login');
+    }
+    
+    const api = new ApiClient(token);
+    
+    try {
+      // Get the form data
+      const formData = await request.formData();
+      
+      // Call the API endpoint to generate a summary
+      const result = await api.patch<Link>(`/links/${params.id}/summarize`, {});
+      
+      return result
+    } catch (e) {
+      console.error('Error generating summary:', e);
+      
+      if (e instanceof ApiError) {
+        if (e.status === 401) {
+          cookies.delete('stash_token', { path: '/' });
+          throw redirect(303, '/login');
+        }
+        console.log(e)
+        return {
+          success: false,
+          error: e.message
+        };
+      }
+      console.log(e)
+      return {
+        success: false,
+        error: 'Failed to generate summary'
+      };
+    }
   }
 };

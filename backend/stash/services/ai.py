@@ -1,10 +1,9 @@
 from datetime import datetime
-import logging
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
+from loguru import logger
 from sqlmodel import Session, select
 from openai import OpenAI
-import httpx
 import yt_dlp
 
 from stash.config import settings
@@ -12,9 +11,7 @@ from stash.db import get_session
 from stash.models.categories import Category
 from stash.models.links import Link, ContentType, ProcessingStatus
 from stash.schemas.category import CategoryAIResponse
-from stash.services.links import LinkMetadata
-
-logger = logging.getLogger(__name__)
+from stash.services.links import LinkMetadata, LinkService
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
@@ -251,7 +248,7 @@ class AIService:
             # Call OpenAI API
             print("Calling OpenAI API to generate weekly digest...")
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-2024-11-20",  # Using the latest model for best quality
+                model="gpt-4o-mini",  # Using mini for cost efficiency
                 messages=[
                     {
                         "role": "system",
@@ -270,3 +267,82 @@ class AIService:
         except Exception as e:
             logger.error(f"Error generating weekly digest: {e}")
             return "We couldn't generate your weekly digest due to a technical issue. Please try again later."
+
+    
+    async def _generate_summary_prompt(self, link: Link, main_content: str, metadata: LinkMetadata) -> str:
+        prompt_parts = ["You are creating a summary for a link. Be thorough, yet concise. Make sure that the user will understand the content of the link after reading the summary."]
+        prompt_parts.append(f"URL: {link.url}")
+        if metadata.content_type:
+            prompt_parts.append(f"Content Type: {metadata.content_type}")
+        if link.title:
+            prompt_parts.append(f"Title: {link.title}")
+        if link.author:
+            prompt_parts.append(f"Author: {link.author}")
+        if main_content:
+            prompt_parts.append(f"Content: {main_content}")
+        return "\n".join(prompt_parts)
+
+         
+
+    async def _process_link_summary_content(self, link: Link, link_service: LinkService) -> tuple[Optional[str], Optional[LinkMetadata]]:
+        """
+        Proccess a link's content, minimizing token count where possible.
+        """
+        metadata = await link_service.process_new_link(link.url)
+        if metadata.error:
+            logger.error(f"Error processing link {link.url}: {metadata.error}")
+            return None, None
+        
+        main_content = await link_service.extract_main_content(metadata)
+
+        return main_content, metadata
+
+
+    async def _generate_link_summary(self, link: Link, main_content: str, metadata: LinkMetadata) -> str:
+        """Generate a summary of the link content using OpenAI API"""
+        # Truncate content to stay within reasonable token limits
+        max_length = settings.MAX_CONTENT_LENGTH
+        truncated_content = main_content[:max_length] if len(main_content) > max_length else main_content
+        
+        prompt = await self._generate_summary_prompt(link, truncated_content, metadata)
+        
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o",  # Using slightly better model for summaries
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a helpful assistant that summarizes web content concisely and accurately. You are the best in the world at this job. Truly you are the best.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.7,
+                max_tokens=1500,  # Keep summaries relatively short
+            )
+            
+            summary = response.choices[0].message.content.strip()
+            return summary
+        except Exception as e:
+            logger.error(f"Error generating summary: {e}")
+            raise Exception(f"Failed to generate summary: {str(e)}")
+         
+    
+    async def summarize_link(self, link: Link, link_service: LinkService) -> str:
+        """Generate a summary for a link using AI"""
+        try:
+            link_content, metadata = await self._process_link_summary_content(link, link_service)
+            if not link_content or not metadata:
+                logger.error(f"Error processing link {link.url} for summary")
+                return "Could not generate summary due to content extraction issues."
+
+            summary = await self._generate_link_summary(link, link_content, metadata)
+            if not summary:
+                logger.warning(f"Empty summary generated for link {link.id}")
+                return "No summary could be generated."
+
+            logger.info(f"Successfully summarized link {link.id} with AI")
+            return summary
+        except Exception as e:
+            logger.error(f"Error in summarize_link: {str(e)}", exc_info=True)
+            # Return a fallback message instead of raising an exception
+            return f"Summary generation failed: {str(e)}"

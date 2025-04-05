@@ -28,6 +28,7 @@ export interface Link {
     original_url?: string;
     title?: string;
     short_summary?: string;
+    summary?: string;
     note?: string;
     read?: boolean;
     

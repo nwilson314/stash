@@ -1,5 +1,6 @@
 from fastapi import BackgroundTasks, HTTPException, Depends
 from sqlmodel import Session, select, col
+from loguru import logger
 
 from stash.core.lib import FastApiRouter
 from stash.core.security import get_current_user
@@ -19,7 +20,7 @@ router = FastApiRouter(
 
 
 @router.get("/")
-def get_links(
+async def get_links(
     db: Session = Depends(get_session), current_user: User = Depends(get_current_user)
 ) -> list[Link]:
     links = db.exec(
@@ -31,7 +32,7 @@ def get_links(
 
 
 @router.get("/{link_id}")
-def get_link(
+async def get_link(
     link_id: int,
     db: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
@@ -45,7 +46,7 @@ def get_link(
 
 
 @router.patch("/{link_id}/read")
-def mark_link_read(
+async def mark_link_read(
     link_id: int,
     db: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
@@ -62,7 +63,7 @@ def mark_link_read(
 
 
 @router.patch("/{link_id}/category")
-def update_link_category(
+async def update_link_category(
     link_id: int,
     category_id: int,
     db: Session = Depends(get_session),
@@ -87,7 +88,7 @@ def update_link_category(
 
 
 @router.delete("/{link_id}", response_model=dict[str, bool], responses=RESPONSE_404)
-def delete_link(
+async def delete_link(
     link_id: int,
     db: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
@@ -141,6 +142,48 @@ async def save_link(
     )
 
     return link
+
+@router.patch("/{link_id}/summarize")
+async def summarize_link(
+    link_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    ai_service: AIService = Depends(get_ai_service),
+    link_service: LinkService = Depends(get_link_service),
+) -> Link:
+    logger.info(f"Starting summarization for link {link_id} by user {current_user.id}")
+    db_link = db.exec(
+        select(Link).where(Link.id == link_id, Link.user_id == current_user.id)
+    ).first()
+    if not db_link:
+        logger.warning(f"Link {link_id} not found for user {current_user.id}")
+        raise HTTPException(status_code=404, detail="link not found")
+    
+    try:
+        # Get summary from AI service
+        logger.info(f"Calling AI service to summarize link {link_id}")
+        summary = await ai_service.summarize_link(db_link, link_service)
+        logger.info(f"Received summary for link {link_id}, length: {len(summary) if summary else 0}")
+        
+        # Update link with summary
+        db_link.summary = summary
+        
+        # Commit changes to database
+        try:
+            db.commit()
+            db.refresh(db_link)
+            logger.info(f"Successfully updated link {link_id} with summary")
+        except Exception as db_error:
+            logger.error(f"Database error updating link {link_id}: {str(db_error)}")
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Database error: {str(db_error)}")
+        
+        # Return the updated link
+        return db_link
+    except Exception as e:
+        logger.error(f"Error summarizing link {link_id}: {str(e)}", exc_info=True)
+        db.rollback()  # Make sure to rollback any pending changes
+        raise HTTPException(status_code=500, detail=f"Failed to summarize link: {str(e)}")
 
 
 @router.post("/migrate-orphaned-links", response_model=dict[str, int])

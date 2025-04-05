@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     # AI
     OPENAI_API_KEY: str = ""
+    MAX_CONTENT_LENGTH: int = 4000
 
     # Email settings
     SMTP_SERVER: str = "smtp.gmail.com"

@@ -31,6 +31,7 @@ class Link(SQLModel, table=True):
     original_url: Optional[str] = Field(default=None)  # Store pre-redirect URL
     title: Optional[str] = Field(default=None)
     short_summary: Optional[str] = Field(default=None)
+    summary: Optional[str] = Field(default=None)
     note: Optional[str] = Field(default=None)
     read: bool = Field(default=False)
 

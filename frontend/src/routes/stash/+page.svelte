@@ -563,7 +563,7 @@
                             <span class="text-blue-400 truncate max-w-full font-medium">
                                 {link.title || link.url}
                             </span>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 min-w-[4rem] inline-block text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 min-w-[4rem] inline-block text-center overflow-hidden text-ellipsis whitespace-nowrap ml-auto">
                                 {getCategoryName(link.category_id)}
                             </span>
                         </div>
